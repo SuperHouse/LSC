@@ -2,7 +2,7 @@ Home Automation Light Switch Controller
 =======================================
 Copyright 2019 SuperHouse Automation Pty Ltd  www.superhouse.tv  
 
-Light switch controller for connection to SuperHouse light switches.
+24 channel light switch controller for connection to SuperHouse light switches.
 
 Features:
 
@@ -11,7 +11,7 @@ Features:
 
 More information:
 
-  http://www.superhouse.tv/
+  http://www.superhouse.tv/lsc24
 
 INSTALLATION
 ------------
