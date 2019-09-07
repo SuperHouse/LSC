@@ -229,9 +229,10 @@
 <wire x1="7.008" y1="35.01" x2="7.516" y2="35.264" width="0.4064" layer="21"/>
 <text x="12.455" y="32.854" size="3.1" layer="21" font="vector" ratio="17" distance="30" align="center-left">Super
 House</text>
-<text x="3.455" y="16.854" size="3.2" layer="21" font="vector" ratio="17" distance="30">I2C RJ45
+<text x="2.455" y="14.854" size="2.8" layer="21" font="vector" ratio="17" distance="30">24 Channel
+I2C RJ45
 Breakout</text>
-<text x="3.955" y="14.854" size="1.4224" layer="21" font="vector" ratio="17" distance="30">by Jon Oxer</text>
+<text x="4.5" y="12.6" size="1.4224" layer="21" font="vector" ratio="17" distance="30">by Jon Oxer</text>
 <text x="193.455" y="34.854" size="1.6764" layer="22" font="vector" ratio="17" distance="30" rot="MR0">Copyright 2019 SuperHouse Automation Pty Ltd
 
 Released under the terms
