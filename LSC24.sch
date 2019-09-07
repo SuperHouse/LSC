@@ -3172,13 +3172,21 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <sheet>
 <plain>
 <frame x1="0" y1="0" x2="248.92" y2="185.42" columns="8" rows="5" layer="94"/>
-<text x="149.86" y="12.7" size="3.048" layer="94">I2C to 16 x RJ45 Breakout</text>
-<text x="215.9" y="6.858" size="1.778" layer="94">V1.0 (2019-07-25)</text>
-<text x="149.606" y="6.858" size="1.778" layer="94">www.superhouse.tv/i2crj45x16</text>
-<text x="187.96" y="6.858" size="1.778" layer="94">SKU: I2CRJ45X16</text>
+<text x="149.86" y="12.7" size="3.048" layer="94">I2C to 24 x RJ45 Breakout</text>
+<text x="215.9" y="6.858" size="1.778" layer="94">V1.0 (2019-09-14)</text>
+<text x="149.606" y="6.858" size="1.778" layer="94">www.superhouse.tv/i2crj45x24</text>
+<text x="187.96" y="6.858" size="1.778" layer="94">SKU: I2CRJ45X24</text>
 <frame x1="147.32" y1="5.08" x2="243.84" y2="17.78" columns="0" rows="0" layer="94" border-left="no" border-top="no" border-right="no" border-bottom="no"/>
 <frame x1="185.42" y1="5.08" x2="213.36" y2="10.16" columns="8" rows="5" layer="94"/>
 <frame x1="213.36" y1="5.08" x2="243.84" y2="10.16" columns="8" rows="5" layer="94"/>
+<text x="10.16" y="10.16" size="1.778" layer="97">1: Data 1
+2: Data 2
+3: Data 3
+4: VIN
+5: VIN
+6: Data 4
+7: GND
+8: GND</text>
 </plain>
 <instances>
 <instance part="GND4" gate="1" x="198.12" y="119.38" smashed="yes">
