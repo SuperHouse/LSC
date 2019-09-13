@@ -300,23 +300,6 @@ chip</description>
 <rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35"/>
 <rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35" rot="R180"/>
 </package>
-<package name="C0402" urn="urn:adsk.eagle:footprint:11872682/1" library_version="34">
-<description>&lt;b&gt;CAPACITOR&lt;/b&gt;&lt;p&gt;
-chip</description>
-<wire x1="-0.245" y1="0.224" x2="0.245" y2="0.224" width="0.1524" layer="51"/>
-<wire x1="0.245" y1="-0.224" x2="-0.245" y2="-0.224" width="0.1524" layer="51"/>
-<wire x1="-1.473" y1="0.483" x2="1.473" y2="0.483" width="0.0508" layer="39"/>
-<wire x1="1.473" y1="0.483" x2="1.473" y2="-0.483" width="0.0508" layer="39"/>
-<wire x1="1.473" y1="-0.483" x2="-1.473" y2="-0.483" width="0.0508" layer="39"/>
-<wire x1="-1.473" y1="-0.483" x2="-1.473" y2="0.483" width="0.0508" layer="39"/>
-<smd name="1" x="-0.65" y="0" dx="0.7" dy="0.9" layer="1"/>
-<smd name="2" x="0.65" y="0" dx="0.7" dy="0.9" layer="1"/>
-<text x="-0.889" y="0.6985" size="0.4064" layer="25">&gt;NAME</text>
-<text x="-1.0795" y="-1.143" size="0.4064" layer="27">&gt;VALUE</text>
-<rectangle x1="-0.554" y1="-0.3048" x2="-0.254" y2="0.2951" layer="51"/>
-<rectangle x1="0.2588" y1="-0.3048" x2="0.5588" y2="0.2951" layer="51"/>
-<rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35"/>
-</package>
 <package name="C0805" urn="urn:adsk.eagle:footprint:7065891/3" library_version="34">
 <description>Ceramic capacitor, 0805 size</description>
 <wire x1="-0.3" y1="0.6" x2="0.3" y2="0.6" width="0.1524" layer="21"/>
@@ -495,6 +478,23 @@ Basic small signal diode good up to 200mA. SMB footprint. Common part #: BAS16</
 <rectangle x1="-2.794" y1="-1.0922" x2="-2.2606" y2="1.0922" layer="51"/>
 <rectangle x1="2.2606" y1="-1.0922" x2="2.794" y2="1.0922" layer="51"/>
 </package>
+<package name="C0402" urn="urn:adsk.eagle:footprint:11872682/2" library_version="39">
+<description>&lt;b&gt;CAPACITOR&lt;/b&gt;&lt;p&gt;
+chip</description>
+<text x="-0.889" y="0.6985" size="0.4064" layer="25">&gt;NAME</text>
+<text x="-1.0795" y="-1.143" size="0.4064" layer="27">&gt;VALUE</text>
+<rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35"/>
+<rectangle x1="-0.5" y1="-0.25" x2="-0.25" y2="0.25" layer="51"/>
+<rectangle x1="0.25" y1="-0.25" x2="0.5" y2="0.25" layer="51"/>
+<wire x1="-0.93" y1="0.47" x2="0.93" y2="0.47" width="0.0508" layer="39"/>
+<wire x1="0.93" y1="0.47" x2="0.93" y2="-0.47" width="0.0508" layer="39"/>
+<wire x1="0.93" y1="-0.47" x2="-0.93" y2="-0.47" width="0.0508" layer="39"/>
+<wire x1="-0.93" y1="-0.47" x2="-0.93" y2="0.47" width="0.0508" layer="39"/>
+<wire x1="-0.4" y1="0.2" x2="0.4" y2="0.2" width="0.1016" layer="51"/>
+<wire x1="-0.4" y1="-0.2" x2="0.4" y2="-0.2" width="0.1016" layer="51"/>
+<smd name="1" x="-0.48" y="0" dx="0.59" dy="0.64" layer="1"/>
+<smd name="2" x="0.48" y="0" dx="0.59" dy="0.64" layer="1"/>
+</package>
 </packages>
 <packages3d>
 <package3d name="RESC1608X45" urn="urn:adsk.eagle:package:11768543/2" type="model" library_version="31">
@@ -516,11 +516,6 @@ chip</description>
 <packageinstance name="R2010"/>
 </packageinstances>
 </package3d>
-<package3d name="0402" urn="urn:adsk.eagle:package:7066320/2" type="box" library_version="31">
-<packageinstances>
-<packageinstance name="R0402"/>
-</packageinstances>
-</package3d>
 <package3d name="R0201" urn="urn:adsk.eagle:package:11768544/1" type="box" library_version="31">
 <packageinstances>
 <packageinstance name="R0201"/>
@@ -536,13 +531,6 @@ chip</description>
 &lt;p&gt;Chip package with body size 1.60 X 0.80 X 0.45 mm&lt;/p&gt;</description>
 <packageinstances>
 <packageinstance name="C0603"/>
-</packageinstances>
-</package3d>
-<package3d name="C0402" urn="urn:adsk.eagle:package:7066125/3" type="box" library_version="34">
-<description>&lt;b&gt;CAPACITOR&lt;/b&gt;&lt;p&gt;
-chip</description>
-<packageinstances>
-<packageinstance name="C0402"/>
 </packageinstances>
 </package3d>
 <package3d name="CAPC2012X100" urn="urn:adsk.eagle:package:7066318/4" type="model" library_version="34">
@@ -612,6 +600,20 @@ Basic small signal diode good up to 200mA. SMB footprint. Common part #: BAS16</
 <packageinstance name="SMA-SMB-DIODE"/>
 </packageinstances>
 </package3d>
+<package3d name="RESC1005X30" urn="urn:adsk.eagle:package:7066320/3" type="model" library_version="39">
+<description>Chip, 1.00 X 0.50 X 0.30 mm body
+&lt;p&gt;Chip package with body size 1.00 X 0.50 X 0.30 mm&lt;/p&gt;</description>
+<packageinstances>
+<packageinstance name="R0402"/>
+</packageinstances>
+</package3d>
+<package3d name="RESC1005X30" urn="urn:adsk.eagle:package:7066125/5" type="model" library_version="39">
+<description>Chip, 1.00 X 0.50 X 0.30 mm body
+&lt;p&gt;Chip package with body size 1.00 X 0.50 X 0.30 mm&lt;/p&gt;</description>
+<packageinstances>
+<packageinstance name="C0402"/>
+</packageinstances>
+</package3d>
 </packages3d>
 <symbols>
 <symbol name="RESISTOR" urn="urn:adsk.eagle:symbol:11768462/1" library_version="31">
@@ -647,7 +649,7 @@ Basic small signal diode good up to 200mA. SMB footprint. Common part #: BAS16</
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="RESISTOR" urn="urn:adsk.eagle:component:11768463/4" prefix="R" uservalue="yes" library_version="31">
+<deviceset name="RESISTOR" urn="urn:adsk.eagle:component:11768463/5" prefix="R" uservalue="yes" library_version="39">
 <description>&lt;b&gt;Resistor&lt;/b&gt;
 Standard resistors.</description>
 <gates>
@@ -684,7 +686,7 @@ Standard resistors.</description>
 <connect gate="G$1" pin="2" pad="2"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066320/2"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:7066320/3"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -734,7 +736,7 @@ Standard resistors.</description>
 </pinmapping>
 </spice>
 </deviceset>
-<deviceset name="CAP" urn="urn:adsk.eagle:component:11768545/6" prefix="C" uservalue="yes" library_version="34">
+<deviceset name="CAP" urn="urn:adsk.eagle:component:11768545/8" prefix="C" uservalue="yes" library_version="39">
 <description>&lt;b&gt;Capacitor&lt;/b&gt;
 Standard ceramic capacitor</description>
 <gates>
@@ -759,7 +761,7 @@ Standard ceramic capacitor</description>
 <connect gate="G$1" pin="2" pad="2"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066125/3"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:7066125/5"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -1206,16 +1208,16 @@ Standard reverse protection diodes and small signal diodes. SMA package can hand
 <rectangle x1="-0.254" y1="-0.254" x2="0.254" y2="0.254" layer="51"/>
 <rectangle x1="12.446" y1="-0.254" x2="12.954" y2="0.254" layer="51"/>
 </package>
-<package name="RJ45-1X1" urn="urn:adsk.eagle:footprint:12799246/1" library_version="77">
+<package name="RJ45-1X1" urn="urn:adsk.eagle:footprint:12799246/2" library_version="98">
 <description>PCB-mount RJ45 Ethernet socket with metal shield. No LEDs.</description>
 <wire x1="7.95" y1="-2" x2="7.95" y2="10.55" width="0.3048" layer="21"/>
 <wire x1="7.95" y1="10.55" x2="-7.95" y2="10.55" width="0.3048" layer="21"/>
 <wire x1="-7.95" y1="10.55" x2="-7.95" y2="-2" width="0.3048" layer="21"/>
-<wire x1="7.95" y1="-10.85" x2="-7.95" y2="-10.85" width="0.2032" layer="51"/>
-<wire x1="-7.95" y1="10.55" x2="-7.95" y2="-10.85" width="0.2032" layer="51"/>
-<wire x1="7.95" y1="-10.85" x2="7.95" y2="10.55" width="0.2032" layer="51"/>
+<wire x1="7.95" y1="-7.8" x2="-7.95" y2="-7.8" width="0.2032" layer="51"/>
+<wire x1="-7.95" y1="10.55" x2="-7.95" y2="-7.8" width="0.2032" layer="51"/>
+<wire x1="7.95" y1="-7.8" x2="7.95" y2="10.55" width="0.2032" layer="51"/>
 <wire x1="7.95" y1="10.55" x2="-7.95" y2="10.55" width="0.2032" layer="51"/>
-<wire x1="7.95" y1="-7" x2="-7.95" y2="-7" width="0.2032" layer="51"/>
+<wire x1="7.95" y1="-5" x2="-7.95" y2="-5" width="0.2032" layer="51"/>
 <pad name="1" x="-4.445" y="6.35" drill="0.9" diameter="1.4224"/>
 <pad name="2" x="-3.175" y="8.89" drill="0.9" diameter="1.4224"/>
 <pad name="3" x="-1.905" y="6.35" drill="0.9" diameter="1.4224"/>
@@ -1224,8 +1226,8 @@ Standard reverse protection diodes and small signal diodes. SMA package can hand
 <pad name="6" x="1.905" y="8.89" drill="0.9" diameter="1.4224"/>
 <pad name="7" x="3.175" y="6.35" drill="0.9" diameter="1.4224"/>
 <pad name="8" x="4.445" y="8.89" drill="0.9" diameter="1.4224"/>
-<pad name="GND@1" x="-7.75" y="-4.57" drill="1.6"/>
-<pad name="GND@2" x="7.75" y="-4.57" drill="1.6"/>
+<pad name="GND@1" x="-7.75" y="-3" drill="1.6"/>
+<pad name="GND@2" x="7.75" y="-3" drill="1.6"/>
 <hole x="-5.715" y="0" drill="3.2"/>
 <hole x="5.715" y="0" drill="3.2"/>
 <text x="-2.54" y="-1.65" size="0.8128" layer="25">&gt;NAME</text>
@@ -1493,7 +1495,7 @@ Standard reverse protection diodes and small signal diodes. SMA package can hand
 <packageinstance name="1X06"/>
 </packageinstances>
 </package3d>
-<package3d name="RJ45-1X1" urn="urn:adsk.eagle:package:12799247/3" type="model" library_version="79">
+<package3d name="RJ45-1X1" urn="urn:adsk.eagle:package:12799247/5" type="model" library_version="98">
 <description>PCB-mount RJ45 Ethernet socket with metal shield. No LEDs.</description>
 <packageinstances>
 <packageinstance name="RJ45-1X1"/>
@@ -1887,7 +1889,7 @@ Standard 1x6 header, and screw terminal variations</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="RJ45-X1" urn="urn:adsk.eagle:component:12799248/3" prefix="J" library_version="79">
+<deviceset name="RJ45-X1" urn="urn:adsk.eagle:component:12799248/5" prefix="J" library_version="98">
 <description>RJ45 socket with GND connection</description>
 <gates>
 <gate name="G$1" symbol="RJ45-1X1" x="0" y="0"/>
@@ -1906,7 +1908,7 @@ Standard 1x6 header, and screw terminal variations</description>
 <connect gate="G$1" pin="GND" pad="GND@1 GND@2"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:12799247/3"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:12799247/5"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -2727,7 +2729,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/21952a.pdf</description>
 <packageinstance name="LED-0805"/>
 </packageinstances>
 </package3d>
-<package3d name="LED-0402" urn="urn:adsk.eagle:package:7066337/1" type="box" library_version="3">
+<package3d name="LED-0402" urn="urn:adsk.eagle:package:7066337/2" type="model" library_version="4">
 <packageinstances>
 <packageinstance name="LED-0402"/>
 </packageinstances>
@@ -2761,7 +2763,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/21952a.pdf</description>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="LED" urn="urn:adsk.eagle:component:11790575/3" prefix="LED" uservalue="yes" library_version="3">
+<deviceset name="LED" urn="urn:adsk.eagle:component:11790575/4" prefix="LED" uservalue="yes" library_version="4">
 <description>&lt;b&gt;LEDs&lt;/b&gt;
 Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LEDs. 5mm - Spark Fun Electronics SKU : COM-00529 (and others)</description>
 <gates>
@@ -2846,7 +2848,7 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <connect gate="G$1" pin="C" pad="C"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066337/1"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:7066337/2"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -3010,29 +3012,46 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 </deviceset>
 </devicesets>
 </library>
-<library name="freetronics">
+<library name="SuperHouse-Symbols" urn="urn:adsk.eagle:library:13228893">
 <packages>
-<package name="FIDUCIAL-1.5X3">
-<circle x="0" y="0" radius="0.9055" width="1.27" layer="29"/>
-<smd name="1" x="0" y="0" dx="1.5" dy="1.5" layer="1" roundness="100" cream="no"/>
-</package>
-<package name="FIDUCIAL-1X2">
-<smd name="1" x="0" y="0" dx="1" dy="1" layer="1" roundness="100" cream="no"/>
-</package>
-<package name="FIDUCIAL-1X2.5">
+<package name="FIDUCIAL-1X2.5" urn="urn:adsk.eagle:footprint:13228894/1" library_version="1">
 <circle x="0" y="0" radius="0.9" width="1.27" layer="29"/>
 <smd name="1" x="0" y="0" dx="1" dy="1" layer="1" roundness="100" cream="no"/>
 </package>
+<package name="FIDUCIAL-1.5X3" urn="urn:adsk.eagle:footprint:13228896/1" library_version="1">
+<circle x="0" y="0" radius="0.9055" width="1.27" layer="29"/>
+<smd name="1" x="0" y="0" dx="1.5" dy="1.5" layer="1" roundness="100" cream="no"/>
+</package>
+<package name="FIDUCIAL-1X2" urn="urn:adsk.eagle:footprint:13228895/1" library_version="1">
+<smd name="1" x="0" y="0" dx="1" dy="1" layer="1" roundness="100" cream="no"/>
+</package>
 </packages>
+<packages3d>
+<package3d name="FIDUCIAL-1X2.5" urn="urn:adsk.eagle:package:13228898/1" type="box" library_version="1">
+<packageinstances>
+<packageinstance name="FIDUCIAL-1X2.5"/>
+</packageinstances>
+</package3d>
+<package3d name="FIDUCIAL-1.5X3" urn="urn:adsk.eagle:package:13228900/1" type="box" library_version="1">
+<packageinstances>
+<packageinstance name="FIDUCIAL-1.5X3"/>
+</packageinstances>
+</package3d>
+<package3d name="FIDUCIAL-1X2" urn="urn:adsk.eagle:package:13228899/1" type="box" library_version="1">
+<packageinstances>
+<packageinstance name="FIDUCIAL-1X2"/>
+</packageinstances>
+</package3d>
+</packages3d>
 <symbols>
-<symbol name="FIDUCIAL">
+<symbol name="FIDUCIAL" urn="urn:adsk.eagle:symbol:13228897/1" library_version="1">
 <wire x1="-0.762" y1="0.762" x2="0.762" y2="-0.762" width="0.254" layer="94"/>
 <wire x1="0.762" y1="0.762" x2="-0.762" y2="-0.762" width="0.254" layer="94"/>
 <circle x="0" y="0" radius="1.27" width="0.254" layer="94"/>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="FIDUCIAL">
+<deviceset name="FIDUCIAL" urn="urn:adsk.eagle:component:13228901/1" library_version="1">
 <description>&lt;b&gt;Fiducial Alignment Points&lt;/b&gt;
 Various fiducial points for machine vision alignment.</description>
 <gates>
@@ -3040,16 +3059,25 @@ Various fiducial points for machine vision alignment.</description>
 </gates>
 <devices>
 <device name="1.5X3" package="FIDUCIAL-1.5X3">
+<package3dinstances>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:13228900/1"/>
+</package3dinstances>
 <technologies>
 <technology name=""/>
 </technologies>
 </device>
 <device name="1X2" package="FIDUCIAL-1X2">
+<package3dinstances>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:13228899/1"/>
+</package3dinstances>
 <technologies>
 <technology name=""/>
 </technologies>
 </device>
 <device name="1X2.5" package="FIDUCIAL-1X2.5">
+<package3dinstances>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:13228898/1"/>
+</package3dinstances>
 <technologies>
 <technology name=""/>
 </technologies>
@@ -3205,19 +3233,19 @@ Various fiducial points for machine vision alignment.</description>
 <part name="C5" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="CAP" device="0805" package3d_urn="urn:adsk.eagle:package:7066318/4" value="10uF"/>
 <part name="C6" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="CAP" device="0805" package3d_urn="urn:adsk.eagle:package:7066318/4" value="10uF"/>
 <part name="J5" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M06" device="-PIN" package3d_urn="urn:adsk.eagle:package:11790969/4"/>
-<part name="J6" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="RJ45-X1" device="-METAL" package3d_urn="urn:adsk.eagle:package:12799247/3"/>
-<part name="J7" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="RJ45-X1" device="-METAL" package3d_urn="urn:adsk.eagle:package:12799247/3"/>
+<part name="J6" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="RJ45-X1" device="-METAL" package3d_urn="urn:adsk.eagle:package:12799247/5"/>
+<part name="J7" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="RJ45-X1" device="-METAL" package3d_urn="urn:adsk.eagle:package:12799247/5"/>
 <part name="LED1" library="SuperHouse-LEDs" library_urn="urn:adsk.eagle:library:11790571" deviceset="LED" device="3MM" package3d_urn="urn:adsk.eagle:package:7066238/2" value="BLUE"/>
 <part name="GND10" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="R67" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K5"/>
-<part name="J4" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M02" device="-SCREW-3.5MM" package3d_urn="urn:adsk.eagle:package:7066395/2"/>
+<part name="J4" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M02" device="-SCREW-3.5MM" package3d_urn="urn:adsk.eagle:package:7066395/2" value="POWER"/>
 <part name="J8" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="POWER_JACK" device="-SLOTS" package3d_urn="urn:adsk.eagle:package:7066536/4"/>
 <part name="GND14" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="GND15" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
-<part name="D1" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="DIODE" device="SMA" package3d_urn="urn:adsk.eagle:package:7066222/3"/>
-<part name="FID1" library="freetronics" deviceset="FIDUCIAL" device="1X2.5"/>
-<part name="FID2" library="freetronics" deviceset="FIDUCIAL" device="1X2.5"/>
-<part name="FID3" library="freetronics" deviceset="FIDUCIAL" device="1X2.5"/>
+<part name="D1" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="DIODE" device="SMA" package3d_urn="urn:adsk.eagle:package:7066222/3" value="SS56"/>
+<part name="FID1" library="SuperHouse-Symbols" library_urn="urn:adsk.eagle:library:13228893" deviceset="FIDUCIAL" device="1X2.5" package3d_urn="urn:adsk.eagle:package:13228898/1"/>
+<part name="FID2" library="SuperHouse-Symbols" library_urn="urn:adsk.eagle:library:13228893" deviceset="FIDUCIAL" device="1X2.5" package3d_urn="urn:adsk.eagle:package:13228898/1"/>
+<part name="FID3" library="SuperHouse-Symbols" library_urn="urn:adsk.eagle:library:13228893" deviceset="FIDUCIAL" device="1X2.5" package3d_urn="urn:adsk.eagle:package:13228898/1"/>
 </parts>
 <sheets>
 <sheet>
@@ -7146,10 +7174,22 @@ VCC: 1.8-5.5V</text>
 <approved hash="104,3,22.86,43.18,J2,GND5,GND,,,"/>
 <approved hash="104,3,167.64,154.94,IC4,VDD,VCC,,,"/>
 <approved hash="104,3,167.64,114.3,IC4,VSS,GND,,,"/>
+<approved hash="104,4,45.72,154.94,IC5,VDD,VCC,,,"/>
+<approved hash="104,4,45.72,114.3,IC5,VSS,GND,,,"/>
+<approved hash="104,4,22.86,50.8,J3,GND0,GND,,,"/>
+<approved hash="104,4,22.86,48.26,J3,GND1,GND,,,"/>
+<approved hash="104,4,114.3,48.26,J3,GND2,GND,,,"/>
+<approved hash="104,4,114.3,43.18,J3,GND3,GND,,,"/>
+<approved hash="104,4,114.3,50.8,J3,GND4,GND,,,"/>
+<approved hash="104,4,22.86,43.18,J3,GND5,GND,,,"/>
+<approved hash="104,4,167.64,154.94,IC6,VDD,VCC,,,"/>
+<approved hash="104,4,167.64,114.3,IC6,VSS,GND,,,"/>
 <approved hash="206,2,45.72,144.78,!INT,,,,,"/>
 <approved hash="206,2,167.64,144.78,!INT,,,,,"/>
 <approved hash="206,3,45.72,144.78,!INT,,,,,"/>
 <approved hash="206,3,167.64,144.78,!INT,,,,,"/>
+<approved hash="206,4,45.72,144.78,!INT,,,,,"/>
+<approved hash="206,4,167.64,144.78,!INT,,,,,"/>
 </errors>
 </schematic>
 </drawing>
