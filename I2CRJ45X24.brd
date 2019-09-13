@@ -188,7 +188,7 @@
 <layer number="255" name="routoute" color="7" fill="1" visible="yes" active="yes"/>
 </layers>
 <board>
-<fusionsync huburn="a.cGVyc29uYWw6dWUyZDliZmNi" projecturn="a.cGVyc29uYWw6dWUyZDliZmNiIzIwMTkwNjE5MTk5NjgzNjgx" f3durn="urn:adsk.wipprod:dm.lineage:7PE12rU6Rs2d8xNWJ3I8mw" pcbguid="240f1cde-c83f-4e3e-9fac-562d2bf45fdf" lastpulledtime="" lastsyncedchangeguid="70009387-506d-845e-ff63-2ca1fa22218c"/>
+<fusionsync huburn="a.cGVyc29uYWw6dWUyZDliZmNi" projecturn="a.cGVyc29uYWw6dWUyZDliZmNiIzIwMTkwNjE5MTk5NjgzNjgx" f3durn="urn:adsk.wipprod:dm.lineage:7PE12rU6Rs2d8xNWJ3I8mw" pcbguid="240f1cde-c83f-4e3e-9fac-562d2bf45fdf" lastpulledtime="" lastsyncedchangeguid="1491f9b9-a179-9c0a-9821-19275fe4b9b0"/>
 <plain>
 <wire x1="3" y1="0" x2="0" y2="3" width="0" layer="20" curve="-90"/>
 <wire x1="0" y1="3" x2="0" y2="47" width="0" layer="20"/>
@@ -291,7 +291,7 @@ License: www.tapr.org/OHL</text>
 <dimension x1="0" y1="-1" x2="13" y2="-1" x3="6.5" y3="-9" textsize="1.778" layer="47"/>
 <wire x1="28" y1="33" x2="28" y2="16" width="0.254" layer="21"/>
 <wire x1="44" y1="33" x2="44" y2="16" width="0.254" layer="21"/>
-<text x="36" y="17" size="2.1844" layer="21" font="vector" ratio="17" distance="30" align="bottom-center">Ethernet
+<text x="36" y="21" size="1.778" layer="21" font="vector" ratio="17" distance="30" align="bottom-center">Ethernet
 Pass-
 through</text>
 <text x="15" y="26.354" size="1.6764" layer="21" font="vector" ratio="17" align="bottom-center">www.superhouse.tv</text>
@@ -3730,6 +3730,7 @@ design rules under a new name.</description>
 <approved hash="19,1,e435e95396ad9bcb"/>
 <approved hash="19,1,8cbc8c236bdd6b42"/>
 <approved hash="19,1,ccafcc22abdcab51"/>
+<approved hash="23,1,1cbc84c285611d1f"/>
 </errors>
 </board>
 </drawing>
