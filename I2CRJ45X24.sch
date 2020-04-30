@@ -3796,7 +3796,7 @@ Various fiducial points for machine vision alignment.</description>
 <plain>
 <frame x1="0" y1="0" x2="248.92" y2="185.42" columns="8" rows="5" layer="94"/>
 <text x="7.62" y="12.7" size="3.048" layer="94">24 Channel I2C RJ45 Breakout</text>
-<text x="73.66" y="6.858" size="1.778" layer="94">V2.0 (2020-04-06)</text>
+<text x="73.66" y="6.858" size="1.778" layer="94">V2.1 (2020-04-13)</text>
 <text x="7.366" y="6.858" size="1.778" layer="94">www.superhouse.tv/i2crj45x24</text>
 <text x="45.72" y="6.858" size="1.778" layer="94">SKU: I2CRJ45X24</text>
 <frame x1="5.08" y1="5.08" x2="101.6" y2="17.78" columns="0" rows="0" layer="94" border-left="no" border-top="no" border-right="no" border-bottom="no"/>
