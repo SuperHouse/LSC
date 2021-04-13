@@ -3016,8 +3016,8 @@ Various fiducial points for machine vision alignment.</description>
 <part name="SJ3" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJ" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066338/1" value="SDA PU"/>
 <part name="P+8" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
 <part name="P+9" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
-<part name="R68" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="4K7"/>
-<part name="R69" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="4K7"/>
+<part name="R99" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="4K7"/>
+<part name="R100" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="4K7"/>
 <part name="R70" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
 <part name="R71" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
 <part name="R72" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
@@ -3050,9 +3050,9 @@ Various fiducial points for machine vision alignment.</description>
 <part name="R96" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
 <part name="R97" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
 <part name="R98" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
-<part name="R99" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
-<part name="R100" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
-<part name="R101" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
+<part name="R69" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
+<part name="R68" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
+<part name="R67" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="1K"/>
 <part name="IC6" library="SuperHouse-ICs" library_urn="urn:adsk.eagle:library:11768868" deviceset="MCP23017" device="SO" package3d_urn="urn:adsk.eagle:package:11963012/2"/>
 <part name="GND12" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="P+10" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
@@ -3063,10 +3063,10 @@ Various fiducial points for machine vision alignment.</description>
 <part name="FID1" library="SuperHouse-Symbols" library_urn="urn:adsk.eagle:library:13228893" deviceset="FIDUCIAL" device="1X2.5" package3d_urn="urn:adsk.eagle:package:13228898/1"/>
 <part name="FID2" library="SuperHouse-Symbols" library_urn="urn:adsk.eagle:library:13228893" deviceset="FIDUCIAL" device="1X2.5" package3d_urn="urn:adsk.eagle:package:13228898/1"/>
 <part name="FID3" library="SuperHouse-Symbols" library_urn="urn:adsk.eagle:library:13228893" deviceset="FIDUCIAL" device="1X2.5" package3d_urn="urn:adsk.eagle:package:13228898/1"/>
-<part name="J9" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M02X3" device="-SHROUDED" package3d_urn="urn:adsk.eagle:package:13425426/3" value="I2C-BREAKOUT"/>
+<part name="J5" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M02X3" device="-SHROUDED" package3d_urn="urn:adsk.eagle:package:13425426/3" value="I2C-BREAKOUT"/>
 <part name="GND6" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="P+5" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
-<part name="J5" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M01" device="-PLAIN" package3d_urn="urn:adsk.eagle:package:13097103/1"/>
+<part name="J6" library="SuperHouse-Connectors" library_urn="urn:adsk.eagle:library:11765989" deviceset="M01" device="-PLAIN" package3d_urn="urn:adsk.eagle:package:13097103/1"/>
 <part name="C7" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="CAP_POL" device="G" package3d_urn="urn:adsk.eagle:package:7066306/2" value="330uF 50V"/>
 <part name="C8" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="CAP_POL" device="G" package3d_urn="urn:adsk.eagle:package:7066306/2" value="330uF 50V"/>
 <part name="GND4" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
@@ -3074,7 +3074,7 @@ Various fiducial points for machine vision alignment.</description>
 <part name="GND7" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="P+4" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
 <part name="LED2" library="SuperHouse-LEDs" library_urn="urn:adsk.eagle:library:11790571" deviceset="LED" device="0603" package3d_urn="urn:adsk.eagle:package:7066240/3" value="BLUE"/>
-<part name="LED3" library="SuperHouse-LEDs" library_urn="urn:adsk.eagle:library:11790571" deviceset="LED" device="0603" package3d_urn="urn:adsk.eagle:package:7066240/3" value="GREEN"/>
+<part name="LED1" library="SuperHouse-LEDs" library_urn="urn:adsk.eagle:library:11790571" deviceset="LED" device="0603" package3d_urn="urn:adsk.eagle:package:7066240/3" value="GREEN"/>
 <part name="R39" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="2K2"/>
 <part name="R40" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="2K2"/>
 <part name="P+7" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
@@ -3085,8 +3085,8 @@ Various fiducial points for machine vision alignment.</description>
 <sheet>
 <plain>
 <frame x1="0" y1="0" x2="248.92" y2="185.42" columns="8" rows="5" layer="94"/>
-<text x="7.62" y="12.7" size="3.048" layer="94">24 Channel I2C RJ45 Breakout</text>
-<text x="73.66" y="6.858" size="1.778" layer="94">V2.2 (2021-04-08)</text>
+<text x="7.62" y="12.7" size="3.048" layer="94">24-Channel I2C RJ45 Breakout</text>
+<text x="73.66" y="6.858" size="1.778" layer="94">V2.2 (2021-04-14)</text>
 <text x="7.366" y="6.858" size="1.778" layer="94">www.superhouse.tv/i2crj45x24</text>
 <text x="45.72" y="6.858" size="1.778" layer="94">SKU: I2CRJ45X24</text>
 <frame x1="5.08" y1="5.08" x2="101.6" y2="17.78" columns="0" rows="0" layer="94" border-left="no" border-top="no" border-right="no" border-bottom="no"/>
@@ -3147,18 +3147,18 @@ VCC: 1.8-5.5V</text>
 <instance part="P+9" gate="1" x="33.02" y="116.84" smashed="yes">
 <attribute name="VALUE" x="32.004" y="120.396" size="1.778" layer="96"/>
 </instance>
-<instance part="R68" gate="G$1" x="22.86" y="96.52" smashed="yes" rot="MR90">
+<instance part="R99" gate="G$1" x="22.86" y="96.52" smashed="yes" rot="MR90">
 <attribute name="NAME" x="24.3586" y="92.71" size="1.778" layer="95" rot="MR90"/>
 <attribute name="VALUE" x="24.638" y="97.79" size="1.778" layer="96" rot="MR90"/>
 </instance>
-<instance part="R69" gate="G$1" x="33.02" y="96.52" smashed="yes" rot="MR90">
+<instance part="R100" gate="G$1" x="33.02" y="96.52" smashed="yes" rot="MR90">
 <attribute name="NAME" x="34.5186" y="92.71" size="1.778" layer="95" rot="MR90"/>
 <attribute name="VALUE" x="34.798" y="97.79" size="1.778" layer="96" rot="MR90"/>
 </instance>
 <instance part="FID1" gate="G$1" x="111.76" y="7.62" smashed="yes"/>
 <instance part="FID2" gate="G$1" x="116.84" y="7.62" smashed="yes"/>
 <instance part="FID3" gate="G$1" x="106.68" y="7.62" smashed="yes"/>
-<instance part="J9" gate="G$1" x="88.9" y="157.48" smashed="yes">
+<instance part="J5" gate="G$1" x="88.9" y="157.48" smashed="yes">
 <attribute name="VALUE" x="86.36" y="147.32" size="1.778" layer="96" align="bottom-center"/>
 <attribute name="NAME" x="88.9" y="160.782" size="1.778" layer="95" align="bottom-center"/>
 </instance>
@@ -3168,7 +3168,7 @@ VCC: 1.8-5.5V</text>
 <instance part="P+5" gate="1" x="78.74" y="160.02" smashed="yes">
 <attribute name="VALUE" x="77.724" y="163.576" size="1.778" layer="96"/>
 </instance>
-<instance part="J5" gate="G$1" x="139.7" y="116.84" smashed="yes" rot="R180">
+<instance part="J6" gate="G$1" x="139.7" y="116.84" smashed="yes" rot="R180">
 <attribute name="VALUE" x="139.7" y="121.92" size="1.778" layer="96" rot="R180" align="bottom-center"/>
 <attribute name="NAME" x="139.7" y="113.538" size="1.778" layer="95" rot="R180" align="bottom-center"/>
 </instance>
@@ -3197,7 +3197,7 @@ VCC: 1.8-5.5V</text>
 <attribute name="NAME" x="74.676" y="86.868" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="76.835" y="86.868" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="LED3" gate="G$1" x="83.82" y="91.44" smashed="yes">
+<instance part="LED1" gate="G$1" x="83.82" y="91.44" smashed="yes">
 <attribute name="NAME" x="87.376" y="86.868" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="89.535" y="86.868" size="1.778" layer="96" rot="R90"/>
 </instance>
@@ -3234,7 +3234,7 @@ VCC: 1.8-5.5V</text>
 <pinref part="GND4" gate="1" pin="GND"/>
 </segment>
 <segment>
-<pinref part="J9" gate="G$1" pin="4"/>
+<pinref part="J5" gate="G$1" pin="4"/>
 <wire x1="96.52" y1="154.94" x2="99.06" y2="154.94" width="0.1524" layer="91"/>
 <wire x1="99.06" y1="154.94" x2="99.06" y2="147.32" width="0.1524" layer="91"/>
 <pinref part="GND6" gate="1" pin="GND"/>
@@ -3251,14 +3251,14 @@ VCC: 1.8-5.5V</text>
 <wire x1="71.12" y1="86.36" x2="71.12" y2="83.82" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="LED3" gate="G$1" pin="C"/>
+<pinref part="LED1" gate="G$1" pin="C"/>
 <pinref part="GND14" gate="1" pin="GND"/>
 <wire x1="83.82" y1="86.36" x2="83.82" y2="83.82" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="VIN" class="0">
 <segment>
-<pinref part="J9" gate="G$1" pin="3"/>
+<pinref part="J5" gate="G$1" pin="3"/>
 <wire x1="81.28" y1="154.94" x2="76.2" y2="154.94" width="0.1524" layer="91"/>
 <label x="76.2" y="154.94" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
@@ -3285,13 +3285,13 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="SDA" class="0">
 <segment>
-<pinref part="R69" gate="G$1" pin="1"/>
+<pinref part="R100" gate="G$1" pin="1"/>
 <wire x1="33.02" y1="91.44" x2="33.02" y2="86.36" width="0.1524" layer="91"/>
 <wire x1="33.02" y1="86.36" x2="38.1" y2="86.36" width="0.1524" layer="91"/>
 <label x="38.1" y="86.36" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
-<pinref part="J9" gate="G$1" pin="2"/>
+<pinref part="J5" gate="G$1" pin="2"/>
 <wire x1="96.52" y1="157.48" x2="101.6" y2="157.48" width="0.1524" layer="91"/>
 <label x="101.6" y="157.48" size="1.27" layer="95" xref="yes"/>
 </segment>
@@ -3303,13 +3303,13 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="SCL" class="0">
 <segment>
-<pinref part="R68" gate="G$1" pin="1"/>
+<pinref part="R99" gate="G$1" pin="1"/>
 <wire x1="22.86" y1="91.44" x2="22.86" y2="81.28" width="0.1524" layer="91"/>
 <wire x1="22.86" y1="81.28" x2="38.1" y2="81.28" width="0.1524" layer="91"/>
 <label x="38.1" y="81.28" size="1.27" layer="95" xref="yes"/>
 </segment>
 <segment>
-<pinref part="J9" gate="G$1" pin="1"/>
+<pinref part="J5" gate="G$1" pin="1"/>
 <wire x1="81.28" y1="157.48" x2="76.2" y2="157.48" width="0.1524" layer="91"/>
 <label x="76.2" y="157.48" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
@@ -3333,7 +3333,7 @@ VCC: 1.8-5.5V</text>
 <segment>
 <pinref part="P+5" gate="1" pin="VCC"/>
 <wire x1="78.74" y1="160.02" x2="78.74" y2="152.4" width="0.1524" layer="91"/>
-<pinref part="J9" gate="G$1" pin="5"/>
+<pinref part="J5" gate="G$1" pin="5"/>
 <wire x1="78.74" y1="152.4" x2="81.28" y2="152.4" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -3351,20 +3351,20 @@ VCC: 1.8-5.5V</text>
 <net name="N$1" class="0">
 <segment>
 <pinref part="SJ2" gate="1" pin="1"/>
-<pinref part="R68" gate="G$1" pin="2"/>
+<pinref part="R99" gate="G$1" pin="2"/>
 <wire x1="22.86" y1="104.14" x2="22.86" y2="101.6" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$2" class="0">
 <segment>
 <pinref part="SJ3" gate="1" pin="1"/>
-<pinref part="R69" gate="G$1" pin="2"/>
+<pinref part="R100" gate="G$1" pin="2"/>
 <wire x1="33.02" y1="104.14" x2="33.02" y2="101.6" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="!RESET" class="0">
 <segment>
-<pinref part="J9" gate="G$1" pin="6"/>
+<pinref part="J5" gate="G$1" pin="6"/>
 <wire x1="96.52" y1="152.4" x2="101.6" y2="152.4" width="0.1524" layer="91"/>
 <label x="101.6" y="152.4" size="1.27" layer="95" xref="yes"/>
 </segment>
@@ -3376,7 +3376,7 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="!INT" class="0">
 <segment>
-<pinref part="J5" gate="G$1" pin="1"/>
+<pinref part="J6" gate="G$1" pin="1"/>
 <wire x1="132.08" y1="116.84" x2="121.92" y2="116.84" width="0.1524" layer="91"/>
 <label x="121.92" y="116.84" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
@@ -3390,7 +3390,7 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="N$8" class="0">
 <segment>
-<pinref part="LED3" gate="G$1" pin="A"/>
+<pinref part="LED1" gate="G$1" pin="A"/>
 <pinref part="R40" gate="G$1" pin="1"/>
 <wire x1="83.82" y1="99.06" x2="83.82" y2="93.98" width="0.1524" layer="91"/>
 </segment>
@@ -5958,15 +5958,15 @@ VCC: 1.8-5.5V</text>
 <attribute name="NAME" x="224.79" y="122.9614" size="1.778" layer="95" rot="MR180"/>
 <attribute name="VALUE" x="229.87" y="122.682" size="1.778" layer="96" rot="MR180"/>
 </instance>
-<instance part="R99" gate="G$1" x="228.6" y="104.14" smashed="yes" rot="MR180">
+<instance part="R69" gate="G$1" x="228.6" y="104.14" smashed="yes" rot="MR180">
 <attribute name="NAME" x="224.79" y="102.6414" size="1.778" layer="95" rot="MR180"/>
 <attribute name="VALUE" x="229.87" y="102.362" size="1.778" layer="96" rot="MR180"/>
 </instance>
-<instance part="R100" gate="G$1" x="228.6" y="129.54" smashed="yes" rot="MR180">
+<instance part="R68" gate="G$1" x="228.6" y="129.54" smashed="yes" rot="MR180">
 <attribute name="NAME" x="224.79" y="128.0414" size="1.778" layer="95" rot="MR180"/>
 <attribute name="VALUE" x="229.87" y="127.762" size="1.778" layer="96" rot="MR180"/>
 </instance>
-<instance part="R101" gate="G$1" x="228.6" y="109.22" smashed="yes" rot="MR180">
+<instance part="R67" gate="G$1" x="228.6" y="109.22" smashed="yes" rot="MR180">
 <attribute name="NAME" x="224.79" y="107.7214" size="1.778" layer="95" rot="MR180"/>
 <attribute name="VALUE" x="229.87" y="107.442" size="1.778" layer="96" rot="MR180"/>
 </instance>
@@ -6420,7 +6420,7 @@ VCC: 1.8-5.5V</text>
 <label x="96.52" y="81.28" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
 <segment>
-<pinref part="R100" gate="G$1" pin="2"/>
+<pinref part="R68" gate="G$1" pin="2"/>
 <wire x1="236.22" y1="129.54" x2="233.68" y2="129.54" width="0.1524" layer="91"/>
 <label x="236.22" y="129.54" size="1.27" layer="95" rot="MR180" xref="yes"/>
 </segment>
@@ -6628,7 +6628,7 @@ VCC: 1.8-5.5V</text>
 <label x="91.44" y="17.78" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
 <segment>
-<pinref part="R101" gate="G$1" pin="2"/>
+<pinref part="R67" gate="G$1" pin="2"/>
 <wire x1="236.22" y1="109.22" x2="233.68" y2="109.22" width="0.1524" layer="91"/>
 <label x="236.22" y="109.22" size="1.27" layer="95" rot="MR180" xref="yes"/>
 </segment>
@@ -6641,7 +6641,7 @@ VCC: 1.8-5.5V</text>
 <label x="91.44" y="15.24" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
 <segment>
-<pinref part="R99" gate="G$1" pin="2"/>
+<pinref part="R69" gate="G$1" pin="2"/>
 <wire x1="236.22" y1="104.14" x2="233.68" y2="104.14" width="0.1524" layer="91"/>
 <label x="236.22" y="104.14" size="1.27" layer="95" rot="MR180" xref="yes"/>
 </segment>
@@ -6927,7 +6927,7 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="GPB0-6" class="0">
 <segment>
-<pinref part="R100" gate="G$1" pin="1"/>
+<pinref part="R68" gate="G$1" pin="1"/>
 <wire x1="213.36" y1="129.54" x2="223.52" y2="129.54" width="0.1524" layer="91"/>
 <label x="215.9" y="129.54" size="1.778" layer="95" rot="MR180"/>
 <pinref part="IC6" gate="G$1" pin="GPB0"/>
@@ -6967,7 +6967,7 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="GPB4-6" class="0">
 <segment>
-<pinref part="R101" gate="G$1" pin="1"/>
+<pinref part="R67" gate="G$1" pin="1"/>
 <label x="215.9" y="109.22" size="1.778" layer="95" rot="MR180"/>
 <pinref part="IC6" gate="G$1" pin="GPB4"/>
 <wire x1="193.04" y1="121.92" x2="203.2" y2="121.92" width="0.1524" layer="91"/>
@@ -6977,7 +6977,7 @@ VCC: 1.8-5.5V</text>
 </net>
 <net name="GPB5-6" class="0">
 <segment>
-<pinref part="R99" gate="G$1" pin="1"/>
+<pinref part="R69" gate="G$1" pin="1"/>
 <label x="215.9" y="104.14" size="1.778" layer="95" rot="MR180"/>
 <wire x1="200.66" y1="119.38" x2="200.66" y2="104.14" width="0.1524" layer="91"/>
 <wire x1="200.66" y1="104.14" x2="223.52" y2="104.14" width="0.1524" layer="91"/>
