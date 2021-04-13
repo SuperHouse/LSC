@@ -6,6 +6,8 @@ Copyright 2019-2021 SuperHouse Automation Pty Ltd  www.superhouse.tv
 I/O controllers. Intended for use in building a home automation light
 switch controller for connection to SuperHouse light switches.
 
+![I2C RJ45 Breakout PCB](Images/I2CRJ45X24-v2_2-render.jpg)
+
 Features:
 
  * 24 x RJ45 sockets for connection to light switches over Cat-5
