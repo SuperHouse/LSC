@@ -198,7 +198,7 @@
 <wire x1="216" y1="47" x2="216" y2="3" width="0" layer="20"/>
 <wire x1="216" y1="3" x2="213" y2="0" width="0" layer="20" curve="-90"/>
 <wire x1="213" y1="0" x2="3" y2="0" width="0" layer="20"/>
-<text x="1" y="2" size="1.778" layer="21" font="vector" ratio="17">v2.2</text>
+<text x="1" y="2" size="1.9" layer="21" font="vector" ratio="17">v3.0</text>
 <text x="97.955" y="47.354" size="1.6764" layer="21" font="vector" ratio="17" align="bottom-center">www.superhouse.tv/i2crj45x24</text>
 <hole x="143" y="8" drill="3.2"/>
 <hole x="143" y="47" drill="3.2"/>
