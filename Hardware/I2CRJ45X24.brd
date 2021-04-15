@@ -188,7 +188,7 @@
 <layer number="255" name="routoute" color="7" fill="1" visible="yes" active="yes"/>
 </layers>
 <board>
-<fusionsync huburn="a.cGVyc29uYWw6dWUyZDliZmNi" projecturn="a.cGVyc29uYWw6dWUyZDliZmNiIzIwMTkwNjE5MTk5NjgzNjgx" f3durn="urn:adsk.wipprod:dm.lineage:7PE12rU6Rs2d8xNWJ3I8mw" pcbguid="240f1cde-c83f-4e3e-9fac-562d2bf45fdf" lastpulledtime="" lastsyncedchangeguid="1491f9b9-a179-9c0a-9821-19275fe4b9b0" latestrevisionid="" lastsyncedrevisionid="" lastboardhashguid="57911f44-b240-5674-ec1f-8acbffdfcb08" lastpushedtime="2021-04-15T04:03:47Z" linktopcb3d="false"/>
+<fusionsync huburn="a.cGVyc29uYWw6dWUyZDliZmNi" projecturn="a.cGVyc29uYWw6dWUyZDliZmNiIzIwMTkwNjE5MTk5NjgzNjgx" f3durn="urn:adsk.wipprod:dm.lineage:7PE12rU6Rs2d8xNWJ3I8mw" pcbguid="240f1cde-c83f-4e3e-9fac-562d2bf45fdf" lastpulledtime="" lastsyncedchangeguid="1491f9b9-a179-9c0a-9821-19275fe4b9b0" latestrevisionid="" lastsyncedrevisionid="" lastboardhashguid="93750741-3b2d-7ddd-64bd-c7f7c55b0702" lastpushedtime="2021-04-15T05:51:18Z" linktopcb3d="false"/>
 <plain>
 <wire x1="3" y1="0" x2="0" y2="3" width="0" layer="20" curve="-90"/>
 <wire x1="0" y1="3" x2="0" y2="47" width="0" layer="20"/>
@@ -226,7 +226,7 @@
 <wire x1="55.492" y1="46.01" x2="54.984" y2="46.264" width="0.4064" layer="22"/>
 <text x="50.045" y="43.854" size="3.1" layer="22" font="vector" ratio="17" distance="30" rot="MR0" align="center-left">Super
 House</text>
-<text x="60.045" y="27" size="2.8" layer="22" font="vector" ratio="17" distance="20" rot="MR0">24-Channel
+<text x="60.045" y="27" size="2.8" layer="22" font="vector" ratio="17" distance="20" rot="MR0">24-Port
 I2C RJ45
 Breakout</text>
 <text x="53" y="25.2" size="1.4224" layer="22" font="vector" ratio="17" distance="30" rot="MR0">by Jon Oxer</text>
@@ -348,7 +348,7 @@ each data line</text>
 <wire x1="4.4" y1="19.6" x2="4.6" y2="19.6" width="0.254" layer="21"/>
 <text x="4.5" y="12" size="1.6" layer="21" font="vector" ratio="17" distance="20" align="bottom-center">Super
 House</text>
-<text x="12" y="47.354" size="1.8" layer="21" font="vector" ratio="17" distance="30">24-Channel I2C RJ45 Breakout</text>
+<text x="11" y="47.354" size="2.1844" layer="21" font="vector" ratio="17" distance="30">24-Port I2C RJ45 Breakout</text>
 <text x="32" y="45.354" size="1.6764" layer="21" font="vector" ratio="17" distance="30">by Jon Oxer</text>
 <text x="40.5" y="24.955" size="1.9304" layer="21" font="vector" ratio="17" rot="R90">VCC: 1.8-5.5V
 VIN: 12V</text>
@@ -746,38 +746,12 @@ Source: http://ww1.microchip.com/downloads/en/devicedoc/39632c.pdf</description>
 <text x="0.4001" y="0" size="0.02" layer="27">&gt;VALUE</text>
 <rectangle x1="-0.0762" y1="-0.9144" x2="0.0762" y2="0.9144" layer="29"/>
 </package>
-<package name="SJC" urn="urn:adsk.eagle:footprint:7065915/1" library_version="3">
-<wire x1="1.397" y1="-1.016" x2="-1.397" y2="-1.016" width="0.1524" layer="21"/>
-<wire x1="1.397" y1="1.016" x2="1.651" y2="0.762" width="0.1524" layer="21" curve="-90"/>
-<wire x1="-1.651" y1="0.762" x2="-1.397" y2="1.016" width="0.1524" layer="21" curve="-90"/>
-<wire x1="-1.651" y1="-0.762" x2="-1.397" y2="-1.016" width="0.1524" layer="21" curve="90"/>
-<wire x1="1.397" y1="-1.016" x2="1.651" y2="-0.762" width="0.1524" layer="21" curve="90"/>
-<wire x1="1.651" y1="-0.762" x2="1.651" y2="0.762" width="0.1524" layer="21"/>
-<wire x1="-1.651" y1="-0.762" x2="-1.651" y2="0.762" width="0.1524" layer="21"/>
-<wire x1="-1.397" y1="1.016" x2="1.397" y2="1.016" width="0.1524" layer="21"/>
-<wire x1="1.016" y1="0" x2="1.524" y2="0" width="0.1524" layer="51"/>
-<wire x1="-1.016" y1="0" x2="-1.524" y2="0" width="0.1524" layer="51"/>
-<wire x1="-0.254" y1="-0.127" x2="-0.254" y2="0.127" width="1.27" layer="51" curve="-180" cap="flat"/>
-<wire x1="0.254" y1="0.127" x2="0.254" y2="-0.127" width="1.27" layer="51" curve="-180" cap="flat"/>
-<wire x1="-0.508" y1="0" x2="0.508" y2="0" width="0.4064" layer="1"/>
-<wire x1="-0.508" y1="0" x2="0.508" y2="0" width="0.3048" layer="51"/>
-<smd name="1" x="-0.762" y="0" dx="1.1684" dy="1.6002" layer="1"/>
-<smd name="2" x="0.762" y="0" dx="1.1684" dy="1.6002" layer="1"/>
-<text x="-1.651" y="1.143" size="1.27" layer="25" ratio="10">&gt;NAME</text>
-<text x="0.4001" y="0" size="0.02" layer="27">&gt;VALUE</text>
-<rectangle x1="-0.0762" y1="-0.9144" x2="0.0762" y2="0.9144" layer="29"/>
-</package>
 </packages>
 <packages3d>
-<package3d name="SJ" urn="urn:adsk.eagle:package:7066338/1" type="box" library_version="2">
+<package3d name="SJ" urn="urn:adsk.eagle:package:7066338/2" type="empty" library_version="3">
 <description>&lt;b&gt;Solder jumper&lt;/b&gt;</description>
 <packageinstances>
 <packageinstance name="SJ"/>
-</packageinstances>
-</package3d>
-<package3d name="SJC" urn="urn:adsk.eagle:package:7066342/2" type="empty" library_version="3">
-<packageinstances>
-<packageinstance name="SJC"/>
 </packageinstances>
 </package3d>
 </packages3d>
@@ -1288,11 +1262,11 @@ design rules under a new name.</description>
 <attribute name="NAME" x="122.738" y="48.8255" size="0.4064" layer="25"/>
 <attribute name="VALUE" x="122.484" y="46.603" size="0.4064" layer="27"/>
 </element>
-<element name="SJ2" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" package="SJ" package3d_urn="urn:adsk.eagle:package:7066338/1" value="SCL PU" x="64.5" y="46" smashed="yes" rot="R90">
+<element name="SJ2" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" package="SJ" package3d_urn="urn:adsk.eagle:package:7066338/2" value="SCL PU" x="64.5" y="46" smashed="yes" rot="R90">
 <attribute name="NAME" x="63.357" y="44.349" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="VALUE" x="64.5" y="46.4001" size="0.02" layer="27" rot="R90"/>
 </element>
-<element name="SJ1" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" package="SJ" package3d_urn="urn:adsk.eagle:package:7066338/1" value="SDA PU" x="61.5" y="46" smashed="yes" rot="R90">
+<element name="SJ1" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" package="SJ" package3d_urn="urn:adsk.eagle:package:7066338/2" value="SDA PU" x="61.5" y="46" smashed="yes" rot="R90">
 <attribute name="NAME" x="60.357" y="44.349" size="1.27" layer="25" ratio="10" rot="R90"/>
 <attribute name="VALUE" x="61.5" y="46.4001" size="0.02" layer="27" rot="R90"/>
 </element>
@@ -1491,11 +1465,11 @@ design rules under a new name.</description>
 <attribute name="NAME" x="213.492" y="21.111" size="0.4064" layer="25" font="vector" rot="R90"/>
 <attribute name="VALUE" x="214.9652" y="20.984" size="0.4064" layer="27" font="vector" rot="R90"/>
 </element>
-<element name="R101" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" package="R0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="22K" x="3.6" y="23.1" smashed="yes" rot="R180">
+<element name="R101" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" package="R0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="10K" x="3.6" y="23.1" smashed="yes" rot="R180">
 <attribute name="NAME" x="4.489" y="22.592" size="0.4064" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="4.616" y="24.0652" size="0.4064" layer="27" font="vector" rot="R180"/>
 </element>
-<element name="SJ3" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" package="SJC" package3d_urn="urn:adsk.eagle:package:7066342/2" value="RST-PU" x="8.4" y="46.9" smashed="yes" rot="R270">
+<element name="SJ3" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" package="SJ" package3d_urn="urn:adsk.eagle:package:7066338/2" value="RST-PU" x="8.4" y="46.9" smashed="yes" rot="R270">
 <attribute name="NAME" x="9.543" y="48.551" size="1.27" layer="25" ratio="10" rot="R270"/>
 <attribute name="VALUE" x="8.4" y="46.4999" size="0.02" layer="27" rot="R270"/>
 </element>
@@ -2475,12 +2449,12 @@ design rules under a new name.</description>
 <wire x1="119.22" y1="42.62" x2="115.62" y2="42.62" width="0.4064" layer="1"/>
 <wire x1="115.62" y1="42.62" x2="115" y2="42" width="0.4064" layer="1"/>
 <wire x1="83" y1="42" x2="82.9" y2="41.9" width="0.3048" layer="1"/>
-<wire x1="82.9" y1="41.9" x2="70" y2="41.9" width="0.3048" layer="1"/>
-<wire x1="70" y1="41.9" x2="62.9" y2="41.9" width="0.3048" layer="1"/>
-<wire x1="62.9" y1="41.9" x2="62" y2="41" width="0.3048" layer="1"/>
-<wire x1="62" y1="41" x2="62" y2="40" width="0.3048" layer="1"/>
-<wire x1="62" y1="40" x2="59.54" y2="37.54" width="0.3048" layer="1"/>
-<wire x1="59.54" y1="37.54" x2="58.78" y2="37.54" width="0.3048" layer="1"/>
+<wire x1="82.9" y1="41.9" x2="70" y2="41.9" width="0.4064" layer="1"/>
+<wire x1="70" y1="41.9" x2="62.9" y2="41.9" width="0.4064" layer="1"/>
+<wire x1="62.9" y1="41.9" x2="62" y2="41" width="0.4064" layer="1"/>
+<wire x1="62" y1="41" x2="62" y2="40" width="0.4064" layer="1"/>
+<wire x1="62" y1="40" x2="59.54" y2="37.54" width="0.4064" layer="1"/>
+<wire x1="59.54" y1="37.54" x2="58.78" y2="37.54" width="0.4064" layer="1"/>
 <wire x1="64.5" y1="46.762" x2="61.5" y2="46.762" width="0.3048" layer="1"/>
 <wire x1="61.5" y1="46.762" x2="60.238" y2="46.762" width="0.3048" layer="1"/>
 <wire x1="60.238" y1="46.762" x2="59.5" y2="47.5" width="0.3048" layer="1"/>

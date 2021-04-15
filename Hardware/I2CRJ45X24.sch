@@ -2795,72 +2795,23 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35"/>
 <rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35" rot="R180"/>
 </package>
-<package name="0402SJC" urn="urn:adsk.eagle:footprint:7065914/1" library_version="3">
-<wire x1="-0.92" y1="0.46" x2="0.92" y2="0.46" width="0.0508" layer="39"/>
-<wire x1="0.92" y1="0.46" x2="0.92" y2="-0.46" width="0.0508" layer="39"/>
-<wire x1="0.92" y1="-0.46" x2="-0.92" y2="-0.46" width="0.0508" layer="39"/>
-<wire x1="-0.92" y1="-0.46" x2="-0.92" y2="0.46" width="0.0508" layer="39"/>
-<wire x1="0.254" y1="0.127" x2="0.254" y2="-0.127" width="0.4064" layer="51" curve="-180" cap="flat"/>
-<wire x1="-0.254" y1="-0.127" x2="-0.254" y2="0.127" width="0.4064" layer="51" curve="-180" cap="flat"/>
-<wire x1="-0.508" y1="0" x2="-0.762" y2="0" width="0.127" layer="51"/>
-<wire x1="0.508" y1="0" x2="0.762" y2="0" width="0.127" layer="51"/>
-<wire x1="-0.254" y1="0" x2="0.254" y2="0" width="0.2032" layer="1"/>
-<wire x1="-0.254" y1="0" x2="0.254" y2="0" width="0.127" layer="51"/>
-<smd name="1" x="-0.48" y="0" dx="0.571" dy="0.62" layer="1"/>
-<smd name="2" x="0.48" y="0" dx="0.571" dy="0.62" layer="1"/>
-<text x="-0.889" y="0.508" size="0.4064" layer="25" font="vector">&gt;NAME</text>
-<text x="-1.016" y="-0.9652" size="0.4064" layer="27" font="vector">&gt;VALUE</text>
-<rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35"/>
-<rectangle x1="-0.1999" y1="-0.3" x2="0.1999" y2="0.3" layer="35" rot="R180"/>
-</package>
-<package name="SJC" urn="urn:adsk.eagle:footprint:7065915/1" library_version="3">
-<wire x1="1.397" y1="-1.016" x2="-1.397" y2="-1.016" width="0.1524" layer="21"/>
-<wire x1="1.397" y1="1.016" x2="1.651" y2="0.762" width="0.1524" layer="21" curve="-90"/>
-<wire x1="-1.651" y1="0.762" x2="-1.397" y2="1.016" width="0.1524" layer="21" curve="-90"/>
-<wire x1="-1.651" y1="-0.762" x2="-1.397" y2="-1.016" width="0.1524" layer="21" curve="90"/>
-<wire x1="1.397" y1="-1.016" x2="1.651" y2="-0.762" width="0.1524" layer="21" curve="90"/>
-<wire x1="1.651" y1="-0.762" x2="1.651" y2="0.762" width="0.1524" layer="21"/>
-<wire x1="-1.651" y1="-0.762" x2="-1.651" y2="0.762" width="0.1524" layer="21"/>
-<wire x1="-1.397" y1="1.016" x2="1.397" y2="1.016" width="0.1524" layer="21"/>
-<wire x1="1.016" y1="0" x2="1.524" y2="0" width="0.1524" layer="51"/>
-<wire x1="-1.016" y1="0" x2="-1.524" y2="0" width="0.1524" layer="51"/>
-<wire x1="-0.254" y1="-0.127" x2="-0.254" y2="0.127" width="1.27" layer="51" curve="-180" cap="flat"/>
-<wire x1="0.254" y1="0.127" x2="0.254" y2="-0.127" width="1.27" layer="51" curve="-180" cap="flat"/>
-<wire x1="-0.508" y1="0" x2="0.508" y2="0" width="0.4064" layer="1"/>
-<wire x1="-0.508" y1="0" x2="0.508" y2="0" width="0.3048" layer="51"/>
-<smd name="1" x="-0.762" y="0" dx="1.1684" dy="1.6002" layer="1"/>
-<smd name="2" x="0.762" y="0" dx="1.1684" dy="1.6002" layer="1"/>
-<text x="-1.651" y="1.143" size="1.27" layer="25" ratio="10">&gt;NAME</text>
-<text x="0.4001" y="0" size="0.02" layer="27">&gt;VALUE</text>
-<rectangle x1="-0.0762" y1="-0.9144" x2="0.0762" y2="0.9144" layer="29"/>
-</package>
 </packages>
 <packages3d>
-<package3d name="SJ" urn="urn:adsk.eagle:package:7066338/1" type="box" library_version="2">
+<package3d name="SJ" urn="urn:adsk.eagle:package:7066338/2" type="empty" library_version="3">
 <description>&lt;b&gt;Solder jumper&lt;/b&gt;</description>
 <packageinstances>
 <packageinstance name="SJ"/>
 </packageinstances>
 </package3d>
-<package3d name="SJW" urn="urn:adsk.eagle:package:7066339/1" type="box" library_version="2">
+<package3d name="SJW" urn="urn:adsk.eagle:package:7066339/2" type="empty" library_version="3">
 <description>&lt;b&gt;Solder jumper&lt;/b&gt;</description>
 <packageinstances>
 <packageinstance name="SJW"/>
 </packageinstances>
 </package3d>
-<package3d name="0402SJO" urn="urn:adsk.eagle:package:7066340/1" type="box" library_version="2">
+<package3d name="0402SJO" urn="urn:adsk.eagle:package:7066340/2" type="empty" library_version="3">
 <packageinstances>
 <packageinstance name="0402SJO"/>
-</packageinstances>
-</package3d>
-<package3d name="0402SJC" urn="urn:adsk.eagle:package:7066341/2" type="empty" library_version="3">
-<packageinstances>
-<packageinstance name="0402SJC"/>
-</packageinstances>
-</package3d>
-<package3d name="SJC" urn="urn:adsk.eagle:package:7066342/2" type="empty" library_version="3">
-<packageinstances>
-<packageinstance name="SJC"/>
 </packageinstances>
 </package3d>
 </packages3d>
@@ -2875,20 +2826,9 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <pin name="2" x="5.08" y="0" visible="pad" length="short" direction="pas" swaplevel="1" rot="R180"/>
 <pin name="1" x="-5.08" y="0" visible="pad" length="short" direction="pas" swaplevel="1"/>
 </symbol>
-<symbol name="SJC" urn="urn:adsk.eagle:symbol:12190623/1" library_version="2">
-<wire x1="0.381" y1="0.635" x2="0.381" y2="-0.635" width="1.27" layer="94" curve="-180" cap="flat"/>
-<wire x1="-0.381" y1="-0.635" x2="-0.381" y2="0.635" width="1.27" layer="94" curve="-180" cap="flat"/>
-<wire x1="2.54" y1="0" x2="1.651" y2="0" width="0.1524" layer="94"/>
-<wire x1="-2.54" y1="0" x2="-1.651" y2="0" width="0.1524" layer="94"/>
-<wire x1="-1.27" y1="0" x2="1.27" y2="0" width="0.4064" layer="94"/>
-<text x="-2.54" y="2.54" size="1.778" layer="95">&gt;NAME</text>
-<text x="-2.54" y="-3.81" size="1.778" layer="96">&gt;VALUE</text>
-<pin name="2" x="5.08" y="0" visible="pad" length="short" direction="pas" swaplevel="1" rot="R180"/>
-<pin name="1" x="-5.08" y="0" visible="pad" length="short" direction="pas" swaplevel="1"/>
-</symbol>
 </symbols>
 <devicesets>
-<deviceset name="SJ" urn="urn:adsk.eagle:component:12190626/1" prefix="SJ" uservalue="yes" library_version="2">
+<deviceset name="SJ" urn="urn:adsk.eagle:component:12190626/2" prefix="SJ" uservalue="yes" library_version="2">
 <description>SMD solder jumper, normally-open. Add solder to close the connection.</description>
 <gates>
 <gate name="1" symbol="SJ" x="0" y="0"/>
@@ -2900,7 +2840,7 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <connect gate="1" pin="2" pad="2"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066338/1"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:7066338/2"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -2912,7 +2852,7 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <connect gate="1" pin="2" pad="2"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066339/1"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:7066339/2"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -2924,39 +2864,7 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <connect gate="1" pin="2" pad="2"/>
 </connects>
 <package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066340/1"/>
-</package3dinstances>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-<deviceset name="SJC" urn="urn:adsk.eagle:component:12190625/2" library_version="2">
-<description>Solder jumper. Normally closed: does not need solder to close. Can be opened by cutting the track.</description>
-<gates>
-<gate name="G$1" symbol="SJC" x="0" y="0"/>
-</gates>
-<devices>
-<device name="-0402" package="0402SJC">
-<connects>
-<connect gate="G$1" pin="1" pad="1"/>
-<connect gate="G$1" pin="2" pad="2"/>
-</connects>
-<package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066341/2"/>
-</package3dinstances>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-<device name="-NORMAL" package="SJC">
-<connects>
-<connect gate="G$1" pin="1" pad="1"/>
-<connect gate="G$1" pin="2" pad="2"/>
-</connects>
-<package3dinstances>
-<package3dinstance package3d_urn="urn:adsk.eagle:package:7066342/2"/>
+<package3dinstance package3d_urn="urn:adsk.eagle:package:7066340/2"/>
 </package3dinstances>
 <technologies>
 <technology name=""/>
@@ -3136,8 +3044,8 @@ Various fiducial points for machine vision alignment.</description>
 <part name="P+6" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
 <part name="C3" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="CAP" device="0805" package3d_urn="urn:adsk.eagle:package:7066318/4" value="10uF"/>
 <part name="C4" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="CAP" device="0805" package3d_urn="urn:adsk.eagle:package:7066318/4" value="10uF"/>
-<part name="SJ2" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJ" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066338/1" value="SCL PU"/>
-<part name="SJ1" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJ" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066338/1" value="SDA PU"/>
+<part name="SJ2" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJ" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066338/2" value="SCL PU"/>
+<part name="SJ1" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJ" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066338/2" value="SDA PU"/>
 <part name="P+8" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
 <part name="P+9" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
 <part name="R99" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="4K7"/>
@@ -3205,15 +3113,15 @@ Various fiducial points for machine vision alignment.</description>
 <part name="GND10" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="GND14" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
 <part name="GND15" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="GND" device=""/>
-<part name="R101" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="22K"/>
+<part name="R101" library="SuperHouse-DiscreteSemi" library_urn="urn:adsk.eagle:library:11768461" deviceset="RESISTOR" device="0603" package3d_urn="urn:adsk.eagle:package:11768543/2" value="10K"/>
 <part name="P+12" library="SuperHouse-SupplySymbols" library_urn="urn:adsk.eagle:library:11790503" deviceset="VCC" device=""/>
-<part name="SJ3" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJC" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066342/2" value="RST-PU"/>
+<part name="SJ3" library="SuperHouse-Jumpers" library_urn="urn:adsk.eagle:library:12190622" deviceset="SJ" device="-NORMAL" package3d_urn="urn:adsk.eagle:package:7066338/2" value="RST-PU"/>
 </parts>
 <sheets>
 <sheet>
 <plain>
 <frame x1="0" y1="0" x2="248.92" y2="185.42" columns="8" rows="5" layer="94"/>
-<text x="149.86" y="12.7" size="3.048" layer="94">24-Channel I2C RJ45 Breakout</text>
+<text x="149.86" y="12.7" size="3.048" layer="94">24-Port I2C RJ45 Breakout</text>
 <text x="215.9" y="6.858" size="1.778" layer="94">V3.0 (2021-04-15)</text>
 <text x="149.606" y="6.858" size="1.778" layer="94">www.superhouse.tv/i2crj45x24</text>
 <text x="187.96" y="6.858" size="1.778" layer="94">SKU: I2CRJ45X24</text>
@@ -3248,8 +3156,8 @@ VCC: 1.8-5.5V</text>
 <wire x1="10.16" y1="137.16" x2="119.38" y2="137.16" width="0.2032" layer="97" style="longdash"/>
 <wire x1="119.38" y1="137.16" x2="119.38" y2="175.26" width="0.2032" layer="97" style="longdash"/>
 <wire x1="119.38" y1="175.26" x2="10.16" y2="175.26" width="0.2032" layer="97" style="longdash"/>
-<text x="147.32" y="20.32" size="1.778" layer="97">I2C pullups are disabled by default. Solder bridge across SJ2 and SJ3 to enable.
-Reset pullup is enabled by default. Cut track between pads to disable.</text>
+<text x="147.32" y="20.32" size="1.778" layer="97">I2C pullups are disabled by default. Solder bridge across SJ1 and SJ2 to enable.
+Reset pullup is disabled by default. Solder bridge across SJ3 to enable.</text>
 <wire x1="93.98" y1="132.08" x2="93.98" y2="76.2" width="0.2032" layer="97" style="longdash"/>
 <wire x1="170.18" y1="132.08" x2="93.98" y2="132.08" width="0.2032" layer="97" style="longdash"/>
 <text x="96.52" y="127" size="2.1844" layer="94">Power</text>
@@ -3357,7 +3265,7 @@ Reset pullup is enabled by default. Cut track between pads to disable.</text>
 <instance part="P+12" gate="1" x="66.04" y="116.84" smashed="yes">
 <attribute name="VALUE" x="65.024" y="120.396" size="1.778" layer="96"/>
 </instance>
-<instance part="SJ3" gate="G$1" x="66.04" y="109.22" smashed="yes" rot="R90">
+<instance part="SJ3" gate="1" x="66.04" y="109.22" smashed="yes" rot="R90">
 <attribute name="NAME" x="63.5" y="106.68" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="69.85" y="106.68" size="1.778" layer="96" rot="R90"/>
 </instance>
@@ -3492,7 +3400,7 @@ Reset pullup is enabled by default. Cut track between pads to disable.</text>
 </segment>
 <segment>
 <pinref part="P+12" gate="1" pin="VCC"/>
-<pinref part="SJ3" gate="G$1" pin="2"/>
+<pinref part="SJ3" gate="1" pin="2"/>
 <wire x1="66.04" y1="114.3" x2="66.04" y2="116.84" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -3552,7 +3460,7 @@ Reset pullup is enabled by default. Cut track between pads to disable.</text>
 <net name="N$3" class="0">
 <segment>
 <pinref part="R101" gate="G$1" pin="2"/>
-<pinref part="SJ3" gate="G$1" pin="1"/>
+<pinref part="SJ3" gate="1" pin="1"/>
 <wire x1="66.04" y1="101.6" x2="66.04" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 </net>
