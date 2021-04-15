@@ -18,6 +18,8 @@ This project has different versions:
  * 8-port version: https://github.com/superhouse/i2crj45x8
  * 16-port version: https://github.com/superhouse/i2crj45x16
  * 24-port version: https://github.com/superhouse/i2crj45x24
+ * 24-port version with passthrough: https://github.com/superhouse/i2crj45x24pt
+
 More information:
 
   http://www.superhouse.tv/i2crj45x24
