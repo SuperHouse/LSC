@@ -1,28 +1,50 @@
-I2C to RJ45 Breakout (24 Port)
-==============================
-Copyright 2019-2021 SuperHouse Automation Pty Ltd  www.superhouse.tv  
+Home Automation Light Switch Controller
+=======================================
 
-24 RJ45 sockets connected to 96 I/O channels via I2C addressable
-I/O controllers. Intended for use in building a home automation light
-switch controller for connection to SuperHouse light switches.
+Copyright 2019-2021 SuperHouse Automation Pty Ltd  www.superhouse.tv
 
-![I2C RJ45 Breakout PCB](Images/I2CRJ45X24-v3_0-render.jpg)
+A modular Light Switch Controller for DIY home automation projects.
+
+This system uses UTP cable (typically Cat-5e because it's cheap) to
+connect light switches to a central controller. The light switches
+can be either very simple buttons or switches mounted in wall plates,
+or smart switches with a microcontroller embedded.
+
+The LSC provides 12V power down the line to each wall plate, which can
+be used for LED illumination or to power more advanced light switches.
+
+Light switches pull one of 4 signal wires in the cable to 0V to indicate
+that they have been activated. The LSC pulls the signal wires high
+internally and detects when they are pulled low.
+
+RJ45 sockets on the LSC are connected to I/O channels via I2C
+addressable I/O buffers. Each RJ45 socket provides connections for
+GND, 12V, and 4 signal lines.
+
+An LSC can be built with different numbers of ports and interface
+options.
+
+Input module options include:
+
+ * 8-port version
+ * 16-port version
+ * 24-port version
+ * 24-port version with Ethernet + power passthrough
+
+![8-port I2C RJ45 Breakout PCB](Images/I2CRJ45X8-v3_0-render.jpg)
+
+![16-port I2C RJ45 Breakout PCB](Images/I2CRJ45X16-v3_0-render.jpg)
+
+![24-port I2C RJ45 Breakout PCB](Images/I2CRJ45X24-v3_0-render.jpg)
 
 Features:
 
- * 24 x RJ45 sockets for connection to light switches over Cat-5
+ * RJ45 sockets for connection to light switches over Cat-5
  * I2C interface with interrupt output
-
-This project has different versions:
-
- * 8-port version: https://github.com/superhouse/i2crj45x8
- * 16-port version: https://github.com/superhouse/i2crj45x16
- * 24-port version: https://github.com/superhouse/i2crj45x24
- * 24-port version with passthrough: https://github.com/superhouse/i2crj45x24pt
 
 More information:
 
-  http://www.superhouse.tv/i2crj45x24
+  http://www.superhouse.tv/lsc
 
 INSTALLATION
 ------------
