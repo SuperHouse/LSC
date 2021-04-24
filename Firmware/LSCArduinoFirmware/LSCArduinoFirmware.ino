@@ -6,7 +6,7 @@
 
   The report is to a topic of the form:
 
-    tele/ABC123/BUTTONS
+    stat/ABC123/BUTTONS
 
   where the "ABC123" is a unique ID derived from the MAC address of the
   device. The message is the numeric ID of the button that was pressed.
@@ -28,11 +28,10 @@
     www.superhouse.tv/lightswitch
 
   Bugs:
-   - Device ID is not being set correctly.
    - LCD doesn't work.
-   - MQTT stops publishing after a while.
 
   To do:
+   - Configurable MCP count.
    - Debouncing.
    - Multi-press, long press.
    - Front panel button inputs.
@@ -44,13 +43,14 @@
   Copyright 2019-2021 SuperHouse Automation Pty Ltd
 */
 
-#define VERSION "2.2 [BBJ]"
+/*--------------------------- Version ------------------------------------*/
+#define VERSION "2.2"
+
 /*--------------------------- Configuration ------------------------------*/
-// Configuration should be done in the included file:
+// Should be no user configuration in this file, everything should be in;
 #include "config.h"
 
 /*--------------------------- Libraries ----------------------------------*/
-//#include <SPI.h>
 #include <Wire.h>                     // For I2C
 #include <Adafruit_GFX.h>             // For OLED
 #include <Adafruit_SSD1306.h>         // For OLED
@@ -67,9 +67,9 @@ const uint16_t BIT_MASK[] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048,
 /*--------------------------- Global Variables ---------------------------*/
 // MQTT
 char g_mqtt_client_id[16];          // MQTT client id
-char g_mqtt_command_topic[25];      // MQTT topic for receiving commands
-char g_mqtt_button_topic[25];       // MQTT topic for reporting button presses
-char g_mqtt_message_buffer[25];     // Longest message we send is currently only 2 bytes long
+char g_mqtt_command_topic[32];      // MQTT topic for receiving commands
+char g_mqtt_button_topic[32];       // MQTT topic for reporting button events
+char g_mqtt_message_buffer[32];     // MQTT message buffer
 
 // Inputs
 uint8_t g_button_status[6][16];
@@ -84,7 +84,7 @@ byte readRegister(byte r);
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // I/O buffers
-Adafruit_MCP23017 g_input_buffers[6];
+Adafruit_MCP23017 mcp23017s[6];
 
 // Ethernet client
 EthernetClient ethernet;
@@ -99,7 +99,8 @@ Adafruit_SSD1306 OLED(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 /**
   Setup
 */
-void setup() {
+void setup() 
+{
   // Start the I2C bus
   Wire.begin();
 
@@ -115,7 +116,8 @@ void setup() {
   initialiseWatchdog();
   
   // Set up display
-  if (ENABLE_OLED) {
+  if (ENABLE_OLED) 
+  {
     OLED.begin(0x3C);
     OLED.clearDisplay();
     OLED.setTextWrap(false);
@@ -132,7 +134,8 @@ void setup() {
   
   // Determine MAC address
   byte mac[6];
-  if (ENABLE_MAC_ADDRESS_ROM) {
+  if (ENABLE_MAC_ADDRESS_ROM) 
+  {
     Serial.print(F("Getting MAC address from ROM: "));
     mac[0] = readRegister(0xFA);
     mac[1] = readRegister(0xFB);
@@ -140,7 +143,9 @@ void setup() {
     mac[3] = readRegister(0xFD);
     mac[4] = readRegister(0xFE);
     mac[5] = readRegister(0xFF);
-  } else {
+  } 
+  else 
+  {
     Serial.print(F("Using static MAC address: "));
     memcpy(mac, static_mac, 6);
   }
@@ -149,10 +154,13 @@ void setup() {
   Serial.println(mac_address);
 
   // Set up Ethernet
-  if (ENABLE_DHCP) {
+  if (ENABLE_DHCP) 
+  {
     Serial.print(F("Getting IP address via DHCP: "));
     Ethernet.begin(mac);
-  } else {
+  } 
+  else 
+  {
     Serial.print(F("Using static IP address: "));
     Ethernet.begin(mac, static_ip, static_dns);
   }
@@ -168,9 +176,17 @@ void setup() {
   sprintf(g_mqtt_client_id, "Arduino-%s", device_id);
   
   // Generate MQTT topics using the device ID
-  sprintf(g_mqtt_command_topic, "%s/cmnd/%s/COMMAND", mqtt_base_topic, device_id);  // For receiving commands
-  sprintf(g_mqtt_button_topic,  "%s/stat/%s/BUTTONS", mqtt_base_topic, device_id);  // Button presses
-
+  if (strlen(mqtt_base_topic) == 0)
+  {
+    sprintf(g_mqtt_command_topic, "cmnd/%s/COMMAND", device_id);
+    sprintf(g_mqtt_button_topic,  "stat/%s/BUTTONS", device_id);
+  }
+  else
+  {
+    sprintf(g_mqtt_command_topic, "%s/cmnd/%s/COMMAND", mqtt_base_topic, device_id);
+    sprintf(g_mqtt_button_topic,  "%s/stat/%s/BUTTONS", mqtt_base_topic, device_id);
+  }
+  
   // Report MQTT details to the serial console
   Serial.print("MQTT client id: ");
   Serial.println(g_mqtt_client_id);
@@ -181,11 +197,13 @@ void setup() {
 
   // Initialise I/O chips
   Serial.print("Initialising MCP23017 I/O chips (x6)...");
-  for (uint8_t mcp = 0; mcp < 6; mcp++) {
-    g_input_buffers[mcp].begin(mcp);
-    for (uint8_t pin = 0; pin < 16; pin++) {
-      g_input_buffers[mcp].pinMode(pin, INPUT);
-      g_input_buffers[mcp].pullUp(pin, HIGH);
+  for (uint8_t mcp = 0; mcp < 6; mcp++) 
+  {
+    mcp23017s[mcp].begin(mcp);
+    for (uint8_t pin = 0; pin < 16; pin++) 
+    {
+      mcp23017s[mcp].pinMode(pin, INPUT);
+      mcp23017s[mcp].pullUp(pin, HIGH);
     }
   }
   Serial.println("done");
@@ -194,24 +212,31 @@ void setup() {
 /**
   Main processing loop
  */
-void loop() {
+void loop() 
+{
   // Check our DHCP lease is still ok
   Ethernet.maintain();
 
   // Process anything on MQTT and reconnect if necessary
-  if (mqtt_client.loop() || mqttConnect()) {
+  if (mqtt_client.loop() || mqttConnect()) 
+  {
     // Pat the watchdog since we are connected to MQTT
     patWatchdog();
     
     // Iterate through each of the MCP23017 input buffers
-    for (uint8_t mcp = 0; mcp < 6; mcp++) {
+    for (uint8_t mcp = 0; mcp < 6; mcp++) 
+    {
       // Read the full set of pins in one hit, then check each      
-      uint16_t io_value = g_input_buffers[mcp].readGPIOAB();
-      for (uint8_t pin = 0; pin < 16; pin++) {
+      uint16_t io_value = mcp23017s[mcp].readGPIOAB();
+      for (uint8_t pin = 0; pin < 16; pin++) 
+      {
         // If the value is HIGH the button is NOT pressed
-        if ((io_value & BIT_MASK[pin]) == BIT_MASK[pin]) {
+        if ((io_value & BIT_MASK[pin]) == BIT_MASK[pin]) 
+        {
           buttonReleased(mcp, pin);
-        } else {
+        } 
+        else 
+        {
           buttonPressed(mcp, pin);
         }
       }
@@ -222,34 +247,53 @@ void loop() {
 /**
   MQTT
 */
-void mqttCallback(char* topic, byte * payload, int length) {
+void mqttCallback(char* topic, byte * payload, int length) 
+{
   Serial.print(F("Received: "));
-  for (int index = 0;  index < length;  index ++) {
+  for (int index = 0;  index < length;  index ++) 
+  {
     Serial.print(payload[index]);
   }
   Serial.println();
 }
 
-boolean mqttConnect() {
+boolean mqttConnect() 
+{
   Serial.print("Connecting to MQTT broker...");
-  boolean success = mqtt_client.connect(g_mqtt_client_id, mqtt_username, mqtt_password, mqtt_lwt_topic, mqtt_lwt_qos, mqtt_lwt_retain, "0");
-  if (success) {
+
+  boolean success;
+  if (ENABLE_MQTT_LWT)
+  {
+    success = mqtt_client.connect(g_mqtt_client_id, mqtt_username, mqtt_password, mqtt_lwt_topic, mqtt_lwt_qos, mqtt_lwt_retain, "0");
+  }
+  else
+  {
+    success = mqtt_client.connect(g_mqtt_client_id, mqtt_username, mqtt_password);
+  }
+
+  if (success) 
+  {
     Serial.println("success");
     
     // Subscribe to our command topic
     mqtt_client.subscribe(g_mqtt_command_topic);
     
-    // Publish retained LWT so anything listening knows we are alive
-    byte data[] = { '1' };
-    mqtt_client.publish(mqtt_lwt_topic, data, 1, mqtt_lwt_retain);
+    // Publish LWT so anything listening knows we are alive
+    if (ENABLE_MQTT_LWT)
+    {
+      byte lwt_payload[] = { '1' };
+      mqtt_client.publish(mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
+    }
     
     // Publish a message on the events topic to indicate startup
-    if (ENABLE_MQTT_EVENTS) {
-      Serial.println("events");
+    if (ENABLE_MQTT_EVENTS) 
+    {
       sprintf(g_mqtt_message_buffer, "%s is starting up", g_mqtt_client_id);
       mqtt_client.publish(mqtt_events_topic, g_mqtt_message_buffer);
     }
-  } else {
+  } 
+  else 
+  {
     Serial.println("failed");
   }
   
@@ -259,15 +303,18 @@ boolean mqttConnect() {
 /**
   Button handlers
  */
-void buttonPressed(uint8_t mcp, uint8_t pin) {
-  if (g_button_status[mcp][pin] != BUTTON_PRESSED) {
+void buttonPressed(uint8_t mcp, uint8_t pin) 
+{
+  if (g_button_status[mcp][pin] != BUTTON_PRESSED) 
+  {
     // Only act if the value has changed
-    if (millis() > g_last_input_time + DEBOUNCE_TIME) {
+    if (millis() > g_last_input_time + DEBOUNCE_TIME) 
+    {
       // Reset our debounce timer
       g_last_input_time = millis();
       
-      // Determine the button number (0-based)
-      uint16_t button = (16 * mcp) + pin;
+      // Determine the button number (1-based)
+      uint16_t button = (16 * mcp) + pin + 1;
 
 #if DEBUG_BUTTONS
       Serial.print("Press detected. Chip:");
@@ -283,11 +330,13 @@ void buttonPressed(uint8_t mcp, uint8_t pin) {
       mqtt_client.publish(g_mqtt_button_topic, g_mqtt_message_buffer);
     }
   }
+  
   // Update the button status
   g_button_status[mcp][pin] = BUTTON_PRESSED;
 }
 
-void buttonReleased(uint8_t mcp, uint8_t pin) {
+void buttonReleased(uint8_t mcp, uint8_t pin) 
+{
   // Update the button status
   g_button_status[mcp][pin] = BUTTON_RELEASED;
 }
@@ -295,21 +344,28 @@ void buttonReleased(uint8_t mcp, uint8_t pin) {
 /**
   Watchdog
  */
-void initialiseWatchdog() {
-  if (ENABLE_WATCHDOG) {
+void initialiseWatchdog() 
+{
+  if (ENABLE_WATCHDOG) 
+  {
     Serial.print("Watchdog enabled on pin ");
     Serial.println(WATCHDOG_PIN);
     
     pinMode(WATCHDOG_PIN, OUTPUT);
     digitalWrite(WATCHDOG_PIN, LOW);
-  } else {
+  } 
+  else 
+  {
     Serial.println("Watchdog NOT enabled");
   }
 }
 
-void patWatchdog() {
-  if (ENABLE_WATCHDOG) {
-    if ((millis() - watchdogLastResetTime) > WATCHDOG_RESET_INTERVAL) {
+void patWatchdog() 
+{
+  if (ENABLE_WATCHDOG) 
+  {
+    if ((millis() - watchdogLastResetTime) > WATCHDOG_RESET_INTERVAL) 
+    {
       // Pulse the watchdog to reset it
       digitalWrite(WATCHDOG_PIN, HIGH);
       delay(WATCHDOG_PULSE_LENGTH);
@@ -324,16 +380,21 @@ void patWatchdog() {
 /**
   Required to read the MAC address ROM via I2C
 */
-byte readRegister(byte r) {
-  unsigned char v;
+byte readRegister(byte r) 
+{
+  // Register to read
   Wire.beginTransmission(MAC_I2C_ADDRESS);
-  Wire.write(r);  // Register to read
+  Wire.write(r);
   Wire.endTransmission();
 
-  Wire.requestFrom(MAC_I2C_ADDRESS, 1); // Read a byte
-  while (!Wire.available()) {
-    // Wait
-  }
+  // Read a byte
+  Wire.requestFrom(MAC_I2C_ADDRESS, 1);
+
+  // Wait
+  while (!Wire.available()) {}
+
+  // Get the value off the bus
+  unsigned char v;
   v = Wire.read();
   return v;
 }

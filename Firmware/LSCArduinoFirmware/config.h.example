@@ -8,18 +8,20 @@
 /* Ethernet */
 #define ENABLE_DHCP                 true
 #define ENABLE_MAC_ADDRESS_ROM      true
-#define MAC_I2C_ADDRESS             0x50    // Microchip 24AA125E48 I2C ROM address
+#define MAC_I2C_ADDRESS             0x50                // Microchip 24AA125E48 I2C ROM address
 
-const byte static_mac[]           = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };  // Use if no MAC ROM
-const byte static_ip[]            = { 192, 168, 1, 35 };                     // Use if DHCP disabled
-const byte static_dns[]           = { 192, 168, 1, 1 };                      // Use if DHCP disabled
+const byte static_mac[]           = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Use if no MAC ROM
+const byte static_ip[]            = { 192, 168, 1, 35 };                    // Use if DHCP disabled
+const byte static_dns[]           = { 192, 168, 1, 1 };                     // Use if DHCP disabled
 
 /* MQTT */
-const char* mqtt_broker           = "192.168.1.185";
+const char* mqtt_broker           = "192.168.1.185";    // IP address or host name of your MQTT broker
 const char* mqtt_username         = "YOUR USERNAME";
 const char* mqtt_password         = "YOUR PASSWORD";
-const char* mqtt_base_topic       = "lights";
-const char* mqtt_lwt_topic        = "clients/lsc";
+const char* mqtt_base_topic       = "lights";           // Should be NO trailing '/', leave empty if no base topic required
+
+#define     ENABLE_MQTT_LWT         false
+const char* mqtt_lwt_topic        = "clients/lsc";      // Should be NO trailing '/'
 const int   mqtt_lwt_qos          = 0;
 const int   mqtt_lwt_retain       = 1;
 
