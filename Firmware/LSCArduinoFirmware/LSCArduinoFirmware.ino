@@ -28,7 +28,7 @@
     www.superhouse.tv/lightswitch
 
   Bugs:
-   - LCD doesn't work.
+   - See GitHub issues list.
 
   To do:
    - Configurable MCP count.
@@ -53,7 +53,7 @@
 /*--------------------------- Libraries ----------------------------------*/
 #include <Wire.h>                     // For I2C
 #include <Adafruit_GFX.h>             // For OLED
-#include <Adafruit_SSD1306.h>         // For OLED
+#include "Adafruit_SH1106.h"          // For OLED
 #include <Ethernet.h>                 // For networking
 #include <PubSubClient.h>             // For MQTT
 #include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
@@ -102,7 +102,7 @@ EthernetClient ethernet;
 PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, ethernet);
 
 // OLED
-Adafruit_SSD1306 OLED(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_SH1106 OLED(OLED_RESET);
 
 /*--------------------------- Program ------------------------------------*/
 /**
@@ -127,7 +127,7 @@ void setup()
   // Set up display
   if (ENABLE_OLED)
   {
-    OLED.begin(0x3C);
+    OLED.begin(SH1106_SWITCHCAPVCC,0x3C);
     OLED.clearDisplay();
     OLED.setTextWrap(false);
     OLED.setTextSize(1);
