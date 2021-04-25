@@ -16,6 +16,7 @@ const byte static_dns[]           = { 192, 168, 1, 1 };                     // U
 
 /* MQTT */
 const char* mqtt_broker           = "192.168.1.185";    // IP address or host name of your MQTT broker
+const int   mqtt_port             = 1883;
 const char* mqtt_username         = "YOUR USERNAME";
 const char* mqtt_password         = "YOUR PASSWORD";
 const char* mqtt_base_topic       = "lights";           // Should be NO trailing '/', leave empty if no base topic required
