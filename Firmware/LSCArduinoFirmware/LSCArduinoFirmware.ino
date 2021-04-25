@@ -99,7 +99,7 @@ Adafruit_MCP23017 mcp23017s[MAX_MCP_COUNT];
 EthernetClient ethernet;
 
 // MQTT client
-PubSubClient mqtt_client(mqtt_broker, 1883, mqttCallback, ethernet);
+PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, ethernet);
 
 // OLED
 Adafruit_SSD1306 OLED(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -319,7 +319,8 @@ boolean mqttConnect()
   } 
   else 
   {
-    Serial.println(F("failed"));
+    Serial.println("failed, wait 5s before trying again");
+    delay(5000);
   }
   
   return success; 
