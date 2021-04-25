@@ -62,7 +62,15 @@
 #define BUTTON_PRESSED    0
 #define BUTTON_RELEASED   1
 
-const uint16_t BIT_MASK[] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
+// A single I2C bus can support up to 8 MCP23017 chips
+const byte MCP_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+const int MAX_MCP_COUNT = sizeof(MCP_ADDRESS);
+
+// To save time during our processing loop we read the the values
+// of all 16 pins in one go and then apply the following bit mask 
+// to extract each individual pin value
+const uint16_t MCP_BIT_MASK[] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
+const int MCP_PIN_COUNT = sizeof(MCP_BIT_MASK) / sizeof(MCP_BIT_MASK[0]);
 
 /*--------------------------- Global Variables ---------------------------*/
 // MQTT
@@ -72,11 +80,12 @@ char g_mqtt_button_topic[32];       // MQTT topic for reporting button events
 char g_mqtt_message_buffer[32];     // MQTT message buffer
 
 // Inputs
-uint8_t g_button_status[6][16];
+uint8_t g_mcp_count        = 0;     // Scan I2C bus for MCP23017 chips on startup
 uint32_t g_last_input_time = 0;     // Used for debouncing
+uint8_t g_button_status[MAX_MCP_COUNT][MCP_PIN_COUNT];
 
 // Watchdog
-long watchdogLastResetTime = 0;
+long g_watchdog_last_reset = 0;
 
 /*--------------------------- Function Signatures ------------------------*/
 void mqttCallback(char* topic, byte* payload, int length);
@@ -84,7 +93,7 @@ byte readRegister(byte r);
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // I/O buffers
-Adafruit_MCP23017 mcp23017s[6];
+Adafruit_MCP23017 mcp23017s[MAX_MCP_COUNT];
 
 // Ethernet client
 EthernetClient ethernet;
@@ -114,7 +123,7 @@ void setup()
 
   // Set up watchdog
   initialiseWatchdog();
-  
+
   // Set up display
   if (ENABLE_OLED) 
   {
@@ -147,7 +156,7 @@ void setup()
   else 
   {
     Serial.print(F("Using static MAC address: "));
-    memcpy(mac, static_mac, 6);
+    memcpy(mac, static_mac, sizeof(mac));
   }
   char mac_address[17];
   sprintf(mac_address, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -188,25 +197,41 @@ void setup()
   }
   
   // Report MQTT details to the serial console
-  Serial.print("MQTT client id: ");
+  Serial.print(F("MQTT client id: "));
   Serial.println(g_mqtt_client_id);
-  Serial.print("MQTT command topic: ");
+  Serial.print(F("MQTT command topic: "));
   Serial.println(g_mqtt_command_topic);
-  Serial.print("MQTT status topic: ");
+  Serial.print(F("MQTT status topic: "));
   Serial.println(g_mqtt_button_topic);
 
+  // Detect I/O chips
+  Serial.print(F("Detecting MCP23017 chips.."));
+  for (uint8_t i = 0; i < sizeof(MCP_ADDRESS); i++)
+  {
+    // We expect the chips to be sequential (i.e. no gaps)
+    Wire.beginTransmission(MCP_ADDRESS[i]);
+    if (Wire.endTransmission() != 0)
+      break;
+      
+    Serial.print(F("0x"));
+    Serial.print(MCP_ADDRESS[i], HEX);
+    Serial.print(F(".."));
+    g_mcp_count++;
+  }
+  Serial.println(F("done"));
+  
   // Initialise I/O chips
-  Serial.print("Initialising MCP23017 I/O chips (x6)...");
-  for (uint8_t mcp = 0; mcp < 6; mcp++) 
+  Serial.print(F("Initialising MCP23017 chips..."));
+  for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++) 
   {
     mcp23017s[mcp].begin(mcp);
-    for (uint8_t pin = 0; pin < 16; pin++) 
+    for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++) 
     {
       mcp23017s[mcp].pinMode(pin, INPUT);
       mcp23017s[mcp].pullUp(pin, HIGH);
     }
   }
-  Serial.println("done");
+  Serial.println(F("done"));
 }
 
 /**
@@ -224,14 +249,14 @@ void loop()
     patWatchdog();
     
     // Iterate through each of the MCP23017 input buffers
-    for (uint8_t mcp = 0; mcp < 6; mcp++) 
+    for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++) 
     {
       // Read the full set of pins in one hit, then check each      
       uint16_t io_value = mcp23017s[mcp].readGPIOAB();
-      for (uint8_t pin = 0; pin < 16; pin++) 
+      for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++) 
       {
         // If the value is HIGH the button is NOT pressed
-        if ((io_value & BIT_MASK[pin]) == BIT_MASK[pin]) 
+        if ((io_value & MCP_BIT_MASK[pin]) == MCP_BIT_MASK[pin]) 
         {
           buttonReleased(mcp, pin);
         } 
@@ -259,7 +284,7 @@ void mqttCallback(char* topic, byte * payload, int length)
 
 boolean mqttConnect() 
 {
-  Serial.print("Connecting to MQTT broker...");
+  Serial.print(F("Connecting to MQTT broker..."));
 
   boolean success;
   if (ENABLE_MQTT_LWT)
@@ -273,7 +298,7 @@ boolean mqttConnect()
 
   if (success) 
   {
-    Serial.println("success");
+    Serial.println(F("success"));
     
     // Subscribe to our command topic
     mqtt_client.subscribe(g_mqtt_command_topic);
@@ -294,7 +319,7 @@ boolean mqttConnect()
   } 
   else 
   {
-    Serial.println("failed");
+    Serial.println(F("failed"));
   }
   
   return success; 
@@ -314,14 +339,14 @@ void buttonPressed(uint8_t mcp, uint8_t pin)
       g_last_input_time = millis();
       
       // Determine the button number (1-based)
-      uint16_t button = (16 * mcp) + pin + 1;
+      uint16_t button = (MCP_PIN_COUNT * mcp) + pin + 1;
 
 #if DEBUG_BUTTONS
-      Serial.print("Press detected. Chip:");
+      Serial.print(F("Press detected. Chip:"));
       Serial.print(mcp);
-      Serial.print(" Bit:");
+      Serial.print(F(" Bit:"));
       Serial.print(pin);
-      Serial.print(" Button:");
+      Serial.print(F(" Button:"));
       Serial.println(button);
 #endif
 
@@ -348,7 +373,7 @@ void initialiseWatchdog()
 {
   if (ENABLE_WATCHDOG) 
   {
-    Serial.print("Watchdog enabled on pin ");
+    Serial.print(F("Watchdog enabled on pin "));
     Serial.println(WATCHDOG_PIN);
     
     pinMode(WATCHDOG_PIN, OUTPUT);
@@ -356,7 +381,7 @@ void initialiseWatchdog()
   } 
   else 
   {
-    Serial.println("Watchdog NOT enabled");
+    Serial.println(F("Watchdog NOT enabled"));
   }
 }
 
@@ -364,7 +389,7 @@ void patWatchdog()
 {
   if (ENABLE_WATCHDOG) 
   {
-    if ((millis() - watchdogLastResetTime) > WATCHDOG_RESET_INTERVAL) 
+    if ((millis() - g_watchdog_last_reset) > WATCHDOG_RESET_INTERVAL) 
     {
       // Pulse the watchdog to reset it
       digitalWrite(WATCHDOG_PIN, HIGH);
@@ -372,7 +397,7 @@ void patWatchdog()
       digitalWrite(WATCHDOG_PIN, LOW);
 
       // Reset our internal timer
-      watchdogLastResetTime = millis();
+      g_watchdog_last_reset = millis();
     }
   }
 }
