@@ -67,7 +67,7 @@ const byte MCP_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 const int MAX_MCP_COUNT = sizeof(MCP_ADDRESS);
 
 // To save time during our processing loop we read the the values
-// of all 16 pins in one go and then apply the following bit mask 
+// of all 16 pins in one go and then apply the following bit mask
 // to extract each individual pin value
 const uint16_t MCP_BIT_MASK[] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
 const int MCP_PIN_COUNT = sizeof(MCP_BIT_MASK) / sizeof(MCP_BIT_MASK[0]);
@@ -108,7 +108,7 @@ Adafruit_SSD1306 OLED(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 /**
   Setup
 */
-void setup() 
+void setup()
 {
   // Start the I2C bus
   Wire.begin();
@@ -125,7 +125,7 @@ void setup()
   initialiseWatchdog();
 
   // Set up display
-  if (ENABLE_OLED) 
+  if (ENABLE_OLED)
   {
     OLED.begin(0x3C);
     OLED.clearDisplay();
@@ -140,10 +140,10 @@ void setup()
     //OLED.println(g_device_id, HEX);
     OLED.display();
   }
-  
+
   // Determine MAC address
   byte mac[6];
-  if (ENABLE_MAC_ADDRESS_ROM) 
+  if (ENABLE_MAC_ADDRESS_ROM)
   {
     Serial.print(F("Getting MAC address from ROM: "));
     mac[0] = readRegister(0xFA);
@@ -152,8 +152,8 @@ void setup()
     mac[3] = readRegister(0xFD);
     mac[4] = readRegister(0xFE);
     mac[5] = readRegister(0xFF);
-  } 
-  else 
+  }
+  else
   {
     Serial.print(F("Using static MAC address: "));
     memcpy(mac, static_mac, sizeof(mac));
@@ -163,12 +163,12 @@ void setup()
   Serial.println(mac_address);
 
   // Set up Ethernet
-  if (ENABLE_DHCP) 
+  if (ENABLE_DHCP)
   {
     Serial.print(F("Getting IP address via DHCP: "));
     Ethernet.begin(mac);
-  } 
-  else 
+  }
+  else
   {
     Serial.print(F("Using static IP address: "));
     Ethernet.begin(mac, static_ip, static_dns);
@@ -183,7 +183,7 @@ void setup()
 
   // Generate MQTT client id
   sprintf(g_mqtt_client_id, "Arduino-%s", device_id);
-  
+
   // Generate MQTT topics using the device ID
   if (strlen(mqtt_base_topic) == 0)
   {
@@ -195,7 +195,7 @@ void setup()
     sprintf(g_mqtt_command_topic, "%s/cmnd/%s/COMMAND", mqtt_base_topic, device_id);
     sprintf(g_mqtt_button_topic,  "%s/stat/%s/BUTTONS", mqtt_base_topic, device_id);
   }
-  
+
   // Report MQTT details to the serial console
   Serial.print(F("MQTT client id: "));
   Serial.println(g_mqtt_client_id);
@@ -212,20 +212,20 @@ void setup()
     Wire.beginTransmission(MCP_ADDRESS[i]);
     if (Wire.endTransmission() != 0)
       break;
-      
+
     Serial.print(F("0x"));
     Serial.print(MCP_ADDRESS[i], HEX);
     Serial.print(F(".."));
     g_mcp_count++;
   }
   Serial.println(F("done"));
-  
+
   // Initialise I/O chips
   Serial.print(F("Initialising MCP23017 chips..."));
-  for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++) 
+  for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++)
   {
     mcp23017s[mcp].begin(mcp);
-    for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++) 
+    for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
     {
       mcp23017s[mcp].pinMode(pin, INPUT);
       mcp23017s[mcp].pullUp(pin, HIGH);
@@ -236,31 +236,31 @@ void setup()
 
 /**
   Main processing loop
- */
-void loop() 
+*/
+void loop()
 {
   // Check our DHCP lease is still ok
   Ethernet.maintain();
 
   // Process anything on MQTT and reconnect if necessary
-  if (mqtt_client.loop() || mqttConnect()) 
+  if (mqtt_client.loop() || mqttConnect())
   {
     // Pat the watchdog since we are connected to MQTT
     patWatchdog();
-    
+
     // Iterate through each of the MCP23017 input buffers
-    for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++) 
+    for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++)
     {
-      // Read the full set of pins in one hit, then check each      
+      // Read the full set of pins in one hit, then check each
       uint16_t io_value = mcp23017s[mcp].readGPIOAB();
-      for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++) 
+      for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
       {
         // If the value is HIGH the button is NOT pressed
-        if ((io_value & MCP_BIT_MASK[pin]) == MCP_BIT_MASK[pin]) 
+        if ((io_value & MCP_BIT_MASK[pin]) == MCP_BIT_MASK[pin])
         {
           buttonReleased(mcp, pin);
-        } 
-        else 
+        }
+        else
         {
           buttonPressed(mcp, pin);
         }
@@ -272,17 +272,17 @@ void loop()
 /**
   MQTT
 */
-void mqttCallback(char* topic, byte * payload, int length) 
+void mqttCallback(char* topic, byte * payload, int length)
 {
   Serial.print(F("Received: "));
-  for (int index = 0;  index < length;  index ++) 
+  for (int index = 0;  index < length;  index ++)
   {
     Serial.print(payload[index]);
   }
   Serial.println();
 }
 
-boolean mqttConnect() 
+boolean mqttConnect()
 {
   Serial.print(F("Connecting to MQTT broker..."));
 
@@ -296,49 +296,49 @@ boolean mqttConnect()
     success = mqtt_client.connect(g_mqtt_client_id, mqtt_username, mqtt_password);
   }
 
-  if (success) 
+  if (success)
   {
     Serial.println(F("success"));
-    
+
     // Subscribe to our command topic
     mqtt_client.subscribe(g_mqtt_command_topic);
-    
+
     // Publish LWT so anything listening knows we are alive
     if (ENABLE_MQTT_LWT)
     {
       byte lwt_payload[] = { '1' };
       mqtt_client.publish(mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
     }
-    
+
     // Publish a message on the events topic to indicate startup
-    if (ENABLE_MQTT_EVENTS) 
+    if (ENABLE_MQTT_EVENTS)
     {
       sprintf(g_mqtt_message_buffer, "%s is starting up", g_mqtt_client_id);
       mqtt_client.publish(mqtt_events_topic, g_mqtt_message_buffer);
     }
-  } 
-  else 
+  }
+  else
   {
-    Serial.println("failed, wait 5s before trying again");
+    Serial.println(F("failed, wait 5s before trying again"));
     delay(5000);
   }
-  
-  return success; 
+
+  return success;
 }
 
 /**
   Button handlers
- */
-void buttonPressed(uint8_t mcp, uint8_t pin) 
+*/
+void buttonPressed(uint8_t mcp, uint8_t pin)
 {
-  if (g_button_status[mcp][pin] != BUTTON_PRESSED) 
+  if (g_button_status[mcp][pin] != BUTTON_PRESSED)
   {
     // Only act if the value has changed
-    if (millis() > g_last_input_time + DEBOUNCE_TIME) 
+    if (millis() > g_last_input_time + DEBOUNCE_TIME)
     {
       // Reset our debounce timer
       g_last_input_time = millis();
-      
+
       // Determine the button number (1-based)
       uint16_t button = (MCP_PIN_COUNT * mcp) + pin + 1;
 
@@ -356,12 +356,12 @@ void buttonPressed(uint8_t mcp, uint8_t pin)
       mqtt_client.publish(g_mqtt_button_topic, g_mqtt_message_buffer);
     }
   }
-  
+
   // Update the button status
   g_button_status[mcp][pin] = BUTTON_PRESSED;
 }
 
-void buttonReleased(uint8_t mcp, uint8_t pin) 
+void buttonReleased(uint8_t mcp, uint8_t pin)
 {
   // Update the button status
   g_button_status[mcp][pin] = BUTTON_RELEASED;
@@ -369,28 +369,28 @@ void buttonReleased(uint8_t mcp, uint8_t pin)
 
 /**
   Watchdog
- */
-void initialiseWatchdog() 
+*/
+void initialiseWatchdog()
 {
-  if (ENABLE_WATCHDOG) 
+  if (ENABLE_WATCHDOG)
   {
     Serial.print(F("Watchdog enabled on pin "));
     Serial.println(WATCHDOG_PIN);
-    
+
     pinMode(WATCHDOG_PIN, OUTPUT);
     digitalWrite(WATCHDOG_PIN, LOW);
-  } 
-  else 
+  }
+  else
   {
     Serial.println(F("Watchdog NOT enabled"));
   }
 }
 
-void patWatchdog() 
+void patWatchdog()
 {
-  if (ENABLE_WATCHDOG) 
+  if (ENABLE_WATCHDOG)
   {
-    if ((millis() - g_watchdog_last_reset) > WATCHDOG_RESET_INTERVAL) 
+    if ((millis() - g_watchdog_last_reset) > WATCHDOG_RESET_INTERVAL)
     {
       // Pulse the watchdog to reset it
       digitalWrite(WATCHDOG_PIN, HIGH);
@@ -406,7 +406,7 @@ void patWatchdog()
 /**
   Required to read the MAC address ROM via I2C
 */
-byte readRegister(byte r) 
+byte readRegister(byte r)
 {
   // Register to read
   Wire.beginTransmission(MAC_I2C_ADDRESS);
