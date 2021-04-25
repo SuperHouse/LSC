@@ -294,7 +294,8 @@ boolean mqttConnect()
   } 
   else 
   {
-    Serial.println("failed");
+    Serial.println("failed, wait 5s before trying again");
+    delay(5000);
   }
   
   return success; 
