@@ -10,6 +10,8 @@ connect light switches to a central controller. The light switches
 can be either very simple buttons or switches mounted in wall plates,
 or smart switches with a microcontroller embedded.
 
+![Light Switch Controller prototype](Images/LSC-prototype.jpg)
+
 The LSC provides 12V power down the line to each wall plate, which can
 be used for LED illumination or to power more advanced light switches.
 
