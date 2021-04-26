@@ -35,7 +35,6 @@
    - Debouncing.
    - Multi-press, long press.
    - Front panel button inputs.
-   - Save button state as 1 byte per port, instead of 1 byte per pin.
 
   Written by Jonathan Oxer for www.superhouse.tv
     https://github.com/superhouse/
@@ -62,15 +61,11 @@
 #define BUTTON_PRESSED    0
 #define BUTTON_RELEASED   1
 
-// A single I2C bus can support up to 8 MCP23017 chips
-const byte MCP_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
-const int MAX_MCP_COUNT = sizeof(MCP_ADDRESS);
+// A single I2C bus can support up to 8 MCP23017 chips (16 inputs each)
+#define MAX_MCP_COUNT     8
+#define MCP_PIN_COUNT     16
 
-// To save time during our processing loop we read the the values
-// of all 16 pins in one go and then apply the following bit mask
-// to extract each individual pin value
-const uint16_t MCP_BIT_MASK[] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
-const int MCP_PIN_COUNT = sizeof(MCP_BIT_MASK) / sizeof(MCP_BIT_MASK[0]);
+const byte MCP_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 
 /*--------------------------- Global Variables ---------------------------*/
 // MQTT
@@ -82,10 +77,10 @@ char g_mqtt_message_buffer[32];     // MQTT message buffer
 // Inputs
 uint8_t g_mcp_count        = 0;     // Scan I2C bus for MCP23017 chips on startup
 uint32_t g_last_input_time = 0;     // Used for debouncing
-uint8_t g_button_status[MAX_MCP_COUNT][MCP_PIN_COUNT];
+uint16_t g_button_status[MAX_MCP_COUNT];
 
 // Watchdog
-long g_watchdog_last_reset = 0;
+uint32_t g_watchdog_last_reset = 0;
 
 /*--------------------------- Function Signatures ------------------------*/
 void mqttCallback(char* topic, byte* payload, int length);
@@ -256,13 +251,13 @@ void loop()
       for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
       {
         // If the value is HIGH the button is NOT pressed
-        if ((io_value & MCP_BIT_MASK[pin]) == MCP_BIT_MASK[pin])
+        if (bitRead(io_value, pin) == BUTTON_PRESSED)
         {
-          buttonReleased(mcp, pin);
+          buttonPressed(mcp, pin);
         }
         else
         {
-          buttonPressed(mcp, pin);
+          buttonReleased(mcp, pin);
         }
       }
     }
@@ -331,7 +326,7 @@ boolean mqttConnect()
 */
 void buttonPressed(uint8_t mcp, uint8_t pin)
 {
-  if (g_button_status[mcp][pin] != BUTTON_PRESSED)
+  if (bitRead(g_button_status[mcp], pin) != BUTTON_PRESSED)
   {
     // Only act if the value has changed
     if (millis() > g_last_input_time + DEBOUNCE_TIME)
@@ -358,13 +353,13 @@ void buttonPressed(uint8_t mcp, uint8_t pin)
   }
 
   // Update the button status
-  g_button_status[mcp][pin] = BUTTON_PRESSED;
+  g_button_status[mcp] = bitWrite(g_button_status[mcp], pin, BUTTON_PRESSED);
 }
 
 void buttonReleased(uint8_t mcp, uint8_t pin)
 {
   // Update the button status
-  g_button_status[mcp][pin] = BUTTON_RELEASED;
+  g_button_status[mcp] = bitWrite(g_button_status[mcp], pin, BUTTON_RELEASED);
 }
 
 /**
