@@ -50,12 +50,12 @@
 #include "config.h"
 
 /*--------------------------- Libraries ----------------------------------*/
-#include <Wire.h>                     // For I2C
-#include <Adafruit_GFX.h>             // For OLED
-#include "Adafruit_SH1106.h"          // For OLED
-#include <Ethernet.h>                 // For networking
-#include <PubSubClient.h>             // For MQTT
-#include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
+#include <Wire.h>                       // For I2C
+#include <Adafruit_GFX.h>               // For OLED
+#include "Adafruit_SH1106.h"            // For OLED
+#include <Ethernet.h>                   // For networking
+#include <PubSubClient.h>               // For MQTT
+#include "Adafruit_MCP23017.h"          // For MCP23017 I/O buffers
 
 /*--------------------------- Constants ----------------------------------*/
 #define BUTTON_PRESSED    0
@@ -65,19 +65,24 @@
 #define MAX_MCP_COUNT     8
 #define MCP_PIN_COUNT     16
 
-const byte MCP_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+// List of all I2C addresses we might be interested in
+// 0x20-0x27 are the 8x MCP23017 chips, 0x3C is the OLED button inputs
+const byte I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x3C };
 
 /*--------------------------- Global Variables ---------------------------*/
 // MQTT
-char g_mqtt_client_id[16];          // MQTT client id
-char g_mqtt_command_topic[32];      // MQTT topic for receiving commands
-char g_mqtt_button_topic[32];       // MQTT topic for reporting button events
-char g_mqtt_message_buffer[32];     // MQTT message buffer
+char g_mqtt_client_id[16];              // MQTT client id
+char g_mqtt_command_topic[32];          // MQTT topic for receiving commands
+char g_mqtt_button_topic[32];           // MQTT topic for reporting button events
+char g_mqtt_message_buffer[32];         // MQTT message buffer
 
 // Inputs
-uint8_t g_mcp_count        = 0;     // Scan I2C bus for MCP23017 chips on startup
-uint32_t g_last_input_time = 0;     // Used for debouncing
+byte g_mcp_address[MAX_MCP_COUNT]     = { 0, 0, 0, 0, 0, 0, 0, 0 };
+uint32_t g_last_input_time = 0;         // Used for debouncing
 uint16_t g_button_status[MAX_MCP_COUNT];
+
+// OLED
+byte g_oled_address = 0;                // Scan I2C bus for OLED
 
 // Watchdog
 uint32_t g_watchdog_last_reset = 0;
@@ -119,10 +124,13 @@ void setup()
   // Set up watchdog
   initialiseWatchdog();
 
-  // Set up display
-  if (ENABLE_OLED)
+  // Scan the I2C bus to determine what hardware we have
+  scanI2CBus();
+  
+  // Set up display if found
+  if (g_oled_address != 0)
   {
-    OLED.begin(SH1106_SWITCHCAPVCC,0x3C);
+    OLED.begin(SH1106_SWITCHCAPVCC, g_oled_address);
     OLED.clearDisplay();
     OLED.setTextWrap(false);
     OLED.setTextSize(1);
@@ -199,26 +207,13 @@ void setup()
   Serial.print(F("MQTT status topic: "));
   Serial.println(g_mqtt_button_topic);
 
-  // Detect I/O chips
-  Serial.print(F("Detecting MCP23017 chips.."));
-  for (uint8_t i = 0; i < sizeof(MCP_ADDRESS); i++)
-  {
-    // We expect the chips to be sequential (i.e. no gaps)
-    Wire.beginTransmission(MCP_ADDRESS[i]);
-    if (Wire.endTransmission() != 0)
-      break;
-
-    Serial.print(F("0x"));
-    Serial.print(MCP_ADDRESS[i], HEX);
-    Serial.print(F(".."));
-    g_mcp_count++;
-  }
-  Serial.println(F("done"));
-
   // Initialise I/O chips
   Serial.print(F("Initialising MCP23017 chips..."));
-  for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++)
+  for (uint8_t mcp = 0; mcp < MAX_MCP_COUNT; mcp++)
   {
+    if (g_mcp_address[mcp] == 0) 
+      continue;
+
     mcp23017s[mcp].begin(mcp);
     for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
     {
@@ -244,8 +239,11 @@ void loop()
     patWatchdog();
 
     // Iterate through each of the MCP23017 input buffers
-    for (uint8_t mcp = 0; mcp < g_mcp_count; mcp++)
+    for (uint8_t mcp = 0; mcp < MAX_MCP_COUNT; mcp++)
     {
+      if (g_mcp_address[mcp] == 0) 
+        continue;
+
       // Read the full set of pins in one hit, then check each
       uint16_t io_value = mcp23017s[mcp].readGPIOAB();
       for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
@@ -397,6 +395,41 @@ void patWatchdog()
     }
   }
 }
+
+/**
+  I2C scanner
+ */
+void scanI2CBus()
+{
+  // Detect devices on the I2C bus to work out what hardware we have
+  Serial.println(F("Detecting devices on the I2C bus..."));
+
+  for (uint8_t i = 0; i < sizeof(I2C_ADDRESS); i++)
+  {
+    byte i2cAddress = I2C_ADDRESS[i];
+    
+    // ignore if nothing found at this address
+    Wire.beginTransmission(i2cAddress);
+    if (Wire.endTransmission() != 0)
+      continue;
+
+    // the last address is the OLED, all others are MCP23017
+    if (i == (sizeof(I2C_ADDRESS) - 1))
+    {
+      g_oled_address = i2cAddress;
+      Serial.print(F(" - OLED at "));
+    }
+    else
+    {
+      g_mcp_address[i] = i2cAddress;
+      Serial.print(F(" - MCP23017 at "));
+    }
+
+    Serial.print(F("0x"));
+    Serial.println(i2cAddress, HEX);
+  }
+}
+
 
 /**
   Required to read the MAC address ROM via I2C
