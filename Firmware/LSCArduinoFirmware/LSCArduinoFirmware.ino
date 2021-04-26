@@ -78,7 +78,8 @@ char g_mqtt_client_id[16];          // MQTT client id
 char g_mqtt_command_topic[32];      // MQTT topic for receiving commands
 char g_mqtt_button_topic[32];       // MQTT topic for reporting button events
 char g_mqtt_message_buffer[32];     // MQTT message buffer
-
+uint8_t g_mqtt_backoff     = 0;     // MQTT reconnect backoff counter
+ 
 // Inputs
 uint8_t g_mcp_count        = 0;     // Scan I2C bus for MCP23017 chips on startup
 uint32_t g_last_input_time = 0;     // Used for debouncing
@@ -299,7 +300,8 @@ boolean mqttConnect()
   if (success)
   {
     Serial.println(F("success"));
-
+    g_mqtt_backoff = 0;
+    
     // Subscribe to our command topic
     mqtt_client.subscribe(g_mqtt_command_topic);
 
@@ -319,8 +321,14 @@ boolean mqttConnect()
   }
   else
   {
-    Serial.println(F("failed, wait 5s before trying again"));
-    delay(5000);
+    // Backoff reconnects in 5s increments, until a max of 30s
+    uint8_t backoffSecs = min(g_mqtt_backoff, 6) * 5;
+    g_mqtt_backoff++;
+    
+    Serial.print(F("failed, waiting "));
+    Serial.print(backoffSecs);
+    Serial.println(F("s"));
+    delay(backoffSecs * 1000);
   }
 
   return success;
