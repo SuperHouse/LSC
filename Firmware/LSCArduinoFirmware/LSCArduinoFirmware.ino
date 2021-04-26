@@ -1,7 +1,7 @@
 /**
   Light Switch Controller to MQTT
 
-  Uses up to 6 MCP23017 I2C I/O buffers to detect light switch presses,
+  Uses MCP23017 I2C I/O buffers to detect light switch presses,
   and report them to MQTT.
 
   The report is to a topic of the form:
@@ -10,7 +10,6 @@
 
   where the "ABC123" is a unique ID derived from the MAC address of the
   device. The message is the numeric ID of the button that was pressed.
-  Buttons are numbered from 1 to 96.
 
   Compile options:
     Arduino Uno or Arduino Mega 2560
@@ -27,14 +26,8 @@
   More information:
     www.superhouse.tv/lightswitch
 
-  Bugs:
+  Bugs/Features:
    - See GitHub issues list.
-
-  To do:
-   - Configurable MCP count.
-   - Debouncing.
-   - Multi-press, long press.
-   - Front panel button inputs.
 
   Written by Jonathan Oxer for www.superhouse.tv
     https://github.com/superhouse/
@@ -50,12 +43,12 @@
 #include "config.h"
 
 /*--------------------------- Libraries ----------------------------------*/
-#include <Wire.h>                       // For I2C
-#include <Adafruit_GFX.h>               // For OLED
-#include "Adafruit_SH1106.h"            // For OLED
-#include <Ethernet.h>                   // For networking
-#include <PubSubClient.h>               // For MQTT
-#include "Adafruit_MCP23017.h"          // For MCP23017 I/O buffers
+#include <Wire.h>                     // For I2C
+#include <Adafruit_GFX.h>             // For OLED
+#include "Adafruit_SH1106.h"          // For OLED
+#include <Ethernet.h>                 // For networking
+#include <PubSubClient.h>             // For MQTT
+#include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
 
 /*--------------------------- Constants ----------------------------------*/
 #define BUTTON_PRESSED    0
@@ -66,35 +59,34 @@
 #define MCP_PIN_COUNT     16
 
 // List of all I2C addresses we might be interested in
-// 0x20-0x27 are the 8x MCP23017 chips, 0x3C is the OLED button inputs
+// 0x20-0x27 are the 8x MCP23017 chips, 0x3C is the OLED
 const byte I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x3C };
 
 /*--------------------------- Global Variables ---------------------------*/
 // MQTT
-char g_mqtt_client_id[16];          // MQTT client id
-char g_mqtt_command_topic[32];      // MQTT topic for receiving commands
-char g_mqtt_button_topic[32];       // MQTT topic for reporting button events
-char g_mqtt_message_buffer[32];     // MQTT message buffer
-uint8_t g_mqtt_backoff     = 0;     // MQTT reconnect backoff counter
+char g_mqtt_client_id[16];            // MQTT client id
+char g_mqtt_command_topic[32];        // MQTT topic for receiving commands
+char g_mqtt_button_topic[32];         // MQTT topic for reporting button events
+char g_mqtt_message_buffer[32];       // MQTT message buffer
+uint8_t g_mqtt_backoff = 0;           // MQTT reconnect backoff counter
  
 // Inputs
-byte g_mcp_address[MAX_MCP_COUNT]     = { 0, 0, 0, 0, 0, 0, 0, 0 };
-uint32_t g_last_input_time = 0;         // Used for debouncing
-uint16_t g_button_status[MAX_MCP_COUNT];
+byte g_mcp_address[MAX_MCP_COUNT];    // Scan I2C bus for MCP23017s
+uint16_t g_mcp_state[MAX_MCP_COUNT];  // Current state so we can detect changes
+uint32_t g_mcp_last_event_time = 0;   // Used for debouncing
 
 // OLED
-byte g_oled_address = 0;                // Scan I2C bus for OLED
+byte g_oled_address = 0;              // Scan I2C bus for OLED
 
 // Watchdog
-uint32_t g_watchdog_last_reset = 0;
+uint32_t g_watchdog_last_reset_time = 0;
 
 /*--------------------------- Function Signatures ------------------------*/
 void mqttCallback(char* topic, byte* payload, int length);
-byte readRegister(byte r);
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // I/O buffers
-Adafruit_MCP23017 mcp23017s[MAX_MCP_COUNT];
+Adafruit_MCP23017 mcp23017[MAX_MCP_COUNT];
 
 // Ethernet client
 EthernetClient ethernet;
@@ -180,9 +172,9 @@ void setup()
   Serial.println(Ethernet.localIP());
 
   // Generate device id
-  Serial.print(F("Device id: "));
   char device_id[17];
   sprintf(device_id, "%02X%02X%02X", mac[3], mac[4], mac[5]);
+  Serial.print(F("Device id: "));
   Serial.println(device_id);
 
   // Generate MQTT client id
@@ -205,7 +197,7 @@ void setup()
   Serial.println(g_mqtt_client_id);
   Serial.print(F("MQTT command topic: "));
   Serial.println(g_mqtt_command_topic);
-  Serial.print(F("MQTT status topic: "));
+  Serial.print(F("MQTT button topic: "));
   Serial.println(g_mqtt_button_topic);
 
   // Initialise I/O chips
@@ -215,11 +207,11 @@ void setup()
     if (g_mcp_address[mcp] == 0) 
       continue;
 
-    mcp23017s[mcp].begin(mcp);
+    mcp23017[mcp].begin(mcp);
     for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
     {
-      mcp23017s[mcp].pinMode(pin, INPUT);
-      mcp23017s[mcp].pullUp(pin, HIGH);
+      mcp23017[mcp].pinMode(pin, INPUT);
+      mcp23017[mcp].pullUp(pin, HIGH);
     }
   }
   Serial.println(F("done"));
@@ -245,11 +237,12 @@ void loop()
       if (g_mcp_address[mcp] == 0) 
         continue;
 
-      // Read the full set of pins in one hit, then check each
-      uint16_t io_value = mcp23017s[mcp].readGPIOAB();
+      // Read the full set of data from this chip in one hit
+      uint16_t io_value = mcp23017[mcp].readGPIOAB();
+
+      // Process each pin (this is not doing any I/O)
       for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
       {
-        // If the value is HIGH the button is NOT pressed
         if (bitRead(io_value, pin) == BUTTON_PRESSED)
         {
           buttonPressed(mcp, pin);
@@ -318,7 +311,7 @@ boolean mqttConnect()
     uint8_t backoffSecs = min(g_mqtt_backoff, 6) * 5;
     g_mqtt_backoff++;
     
-    Serial.print(F("failed, waiting "));
+    Serial.print(F("failed, retry in "));
     Serial.print(backoffSecs);
     Serial.println(F("s"));
     delay(backoffSecs * 1000);
@@ -332,13 +325,13 @@ boolean mqttConnect()
 */
 void buttonPressed(uint8_t mcp, uint8_t pin)
 {
-  if (bitRead(g_button_status[mcp], pin) != BUTTON_PRESSED)
+  if (bitRead(g_mcp_state[mcp], pin) != BUTTON_PRESSED)
   {
     // Only act if the value has changed
-    if (millis() > g_last_input_time + DEBOUNCE_TIME)
+    if (millis() > g_mcp_last_event_time + DEBOUNCE_TIME)
     {
       // Reset our debounce timer
-      g_last_input_time = millis();
+      g_mcp_last_event_time = millis();
 
       // Determine the button number (1-based)
       uint16_t button = (MCP_PIN_COUNT * mcp) + pin + 1;
@@ -358,14 +351,14 @@ void buttonPressed(uint8_t mcp, uint8_t pin)
     }
   }
 
-  // Update the button status
-  g_button_status[mcp] = bitWrite(g_button_status[mcp], pin, BUTTON_PRESSED);
+  // Update the button state
+  g_mcp_state[mcp] = bitWrite(g_mcp_state[mcp], pin, BUTTON_PRESSED);
 }
 
 void buttonReleased(uint8_t mcp, uint8_t pin)
 {
-  // Update the button status
-  g_button_status[mcp] = bitWrite(g_button_status[mcp], pin, BUTTON_RELEASED);
+  // Update the button state
+  g_mcp_state[mcp] = bitWrite(g_mcp_state[mcp], pin, BUTTON_RELEASED);
 }
 
 /**
@@ -391,21 +384,19 @@ void patWatchdog()
 {
   if (ENABLE_WATCHDOG)
   {
-    if ((millis() - g_watchdog_last_reset) > WATCHDOG_RESET_INTERVAL)
+    if (millis() > g_watchdog_last_reset_time + WATCHDOG_RESET_INTERVAL)
     {
-      // Pulse the watchdog to reset it
       digitalWrite(WATCHDOG_PIN, HIGH);
       delay(WATCHDOG_PULSE_LENGTH);
       digitalWrite(WATCHDOG_PIN, LOW);
 
-      // Reset our internal timer
-      g_watchdog_last_reset = millis();
+      g_watchdog_last_reset_time = millis();
     }
   }
 }
 
 /**
-  I2C scanner
+  I2C
  */
 void scanI2CBus()
 {
