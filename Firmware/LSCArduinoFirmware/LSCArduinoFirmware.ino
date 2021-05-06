@@ -361,6 +361,18 @@ void buttonPressed(uint8_t id, uint8_t button, uint8_t state)
     Serial.println(getMqttButtonAction(state));
   }
 
+  if (g_oled_found)
+  {
+    // Show last button event on buttom line
+    oled.setCursor(0, 7);
+    oled.clearToEOL();
+    oled.setInvertMode(true);
+    oled.print(F(" BUTTON: ")); 
+    oled.print(mqtt_button); 
+    oled.print(F("  ")); 
+    oled.print(getMqttButtonAction(state));    
+  }
+
   // Publish event to MQTT
   sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"SWITCH\":%d, \"BUTTON\":%d, \"ACTION\":\"%s\"}"), port, port_switch, mqtt_button, getMqttButtonAction(state));
   mqtt_client.publish(getMqttButtonTopic(mqtt_button), g_mqtt_message_buffer);
