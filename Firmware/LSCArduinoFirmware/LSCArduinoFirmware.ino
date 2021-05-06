@@ -24,6 +24,7 @@
 
   External dependencies. Install using the Arduino library manager:
       "Adafruit_MCP23017"
+      "SSD1306Ascii"
       "PubSubClient" by Nick O'Leary
 
   Bundled dependencies. No need to install separately:
@@ -43,7 +44,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "3.0"
+#define VERSION "3.1"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -54,19 +55,28 @@
 #include <Ethernet.h>                 // For networking
 #include <PubSubClient.h>             // For MQTT
 #include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
-#include "LSC_Button.h"               // For button click handling
+#include "SSD1306Ascii.h"             // For OLED display
+#include "SSD1306AsciiWire.h"         // For OLED display
+#include "LSC_Button.h"               // For button click handling (embedded)
 
 /*--------------------------- Constants ----------------------------------*/
+// Max number of MCP23017 chips supported on an I2C bus
+#define MAX_MCP_COUNT     8
+
 // Each MCP23017 has 16 inputs
 #define MCP_PIN_COUNT     16
 
 // List of I2C addresses we might be interested in 
-//  - 0x20-0x27 are the possible 8x MCP23017 chips 
-const byte MCP_I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25 };
+//  - 0x20-0x27 are the possible 8x MCP23017 chips
+//  - 0x3C is the OLED
+const byte I2C_ADDRESS[]  = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x3C };
 
 /*--------------------------- Global Variables ---------------------------*/
 // Each bit corresponds to an MCP found on the IC2 bus
 uint8_t g_mcps_found = 0;
+
+// Was an OLED found on the I2C bus
+byte g_oled_found = 0;
 
 // Unique device id (last 3 HEX pairs of MAC address)
 char g_device_id[7];
@@ -87,11 +97,14 @@ uint8_t g_mqtt_backoff = 0;
 uint32_t g_watchdog_last_reset_ms = 0;
 
 /*--------------------------- Instantiate Global Objects -----------------*/
+// OLED
+SSD1306AsciiWire oled;
+
 // I/O buffers
-Adafruit_MCP23017 mcp23017[sizeof(MCP_I2C_ADDRESS)];
+Adafruit_MCP23017 mcp23017[MAX_MCP_COUNT];
 
 // Button handlers
-LSC_Button button[sizeof(MCP_I2C_ADDRESS)];
+LSC_Button button[MAX_MCP_COUNT];
 
 // Ethernet client
 EthernetClient ethernet;
@@ -123,7 +136,21 @@ void setup()
 
   // Scan the I2C bus for any MCP23017s and initialise them
   scanI2CBus();
-  
+
+  if (g_oled_found)
+  {
+    oled.clear();
+    oled.println(F("    SuperHouse.TV"));
+    oled.println();
+    oled.set2X();
+    oled.print(F(" LSC v"));
+    oled.print(VERSION);
+    oled.set1X();
+    oled.setCursor(0, 7);
+    oled.print(F(" Free RAM: ")); 
+    oled.println(getFreeRam());
+  }
+   
   // Determine MAC address
   byte mac[6];
   if (ENABLE_MAC_ADDRESS_ROM)
@@ -199,7 +226,7 @@ void loop()
     patWatchdog();
 
     // Iterate through each of the MCP23017 input buffers
-    for (uint8_t i = 0; i < sizeof(MCP_I2C_ADDRESS); i++)
+    for (uint8_t i = 0; i < MAX_MCP_COUNT; i++)
     {
       if (bitRead(g_mcps_found, i) == 0)
         continue;
@@ -334,6 +361,18 @@ void buttonPressed(uint8_t id, uint8_t button, uint8_t state)
     Serial.println(getMqttButtonAction(state));
   }
 
+  if (g_oled_found)
+  {
+    // Show last button event on buttom line
+    oled.setCursor(0, 7);
+    oled.clearToEOL();
+    oled.setInvertMode(true);
+    oled.print(F(" BUTTON: ")); 
+    oled.print(mqtt_button); 
+    oled.print(F("  ")); 
+    oled.print(getMqttButtonAction(state));    
+  }
+
   // Publish event to MQTT
   sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"SWITCH\":%d, \"BUTTON\":%d, \"ACTION\":\"%s\"}"), port, port_switch, mqtt_button, getMqttButtonAction(state));
   mqtt_client.publish(getMqttButtonTopic(mqtt_button), g_mqtt_message_buffer);
@@ -378,34 +417,56 @@ void patWatchdog()
 */
 void scanI2CBus()
 {
-  Serial.println(F("Scanning for MCP23017 I/O chips on the I2C bus..."));
+  Serial.println(F("Scanning for devices on the I2C bus..."));
 
-  for (uint8_t i = 0; i < sizeof(MCP_I2C_ADDRESS); i++)
+  for (uint8_t i = 0; i < sizeof(I2C_ADDRESS); i++)
   {
     Serial.print(F(" - 0x"));
-    Serial.print(MCP_I2C_ADDRESS[i], HEX);
+    Serial.print(I2C_ADDRESS[i], HEX);
     Serial.print(F("..."));
 
-    // Set the bit indicating we found an MCP at this address
-    Wire.beginTransmission(MCP_I2C_ADDRESS[i]);    
-    bitWrite(g_mcps_found, i, Wire.endTransmission() == 0);
-
-    // If a chip was found then initialise and configure the inputs
-    if (bitRead(g_mcps_found, i))
-    {  
-      mcp23017[i].begin(i);
-      for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
+    // Check if there is anything responding on this address
+    Wire.beginTransmission(I2C_ADDRESS[i]);
+    if (Wire.endTransmission() == 0)
+    {
+      if (i < MAX_MCP_COUNT) 
       {
-        mcp23017[i].pinMode(pin, INPUT);
-        mcp23017[i].pullUp(pin, HIGH);
+        bitWrite(g_mcps_found, i, 1);
+        
+        // If an MCP23017 was found then initialise and configure the inputs
+        mcp23017[i].begin(i);
+        for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
+        {
+          mcp23017[i].pinMode(pin, INPUT);
+          mcp23017[i].pullUp(pin, HIGH);
+        }
+
+        // Listen for button events
+        button[i].onButtonPressed(buttonPressed); 
+        
+        Serial.println(F("MCP23017"));
       }
-  
-      button[i].onButtonPressed(buttonPressed); 
-      Serial.println(F("ready"));
+      else
+      {
+        g_oled_found = 1;
+
+        // If an OLED was found then initialise
+        #if OLED_RESET >= 0
+          oled.begin(&SH1106_128x64, I2C_ADDRESS[i], OLED_RESET);
+        #else
+          oled.begin(&SH1106_128x64, I2C_ADDRESS[i]);
+        #endif
+        
+        oled.clear();
+        oled.setFont(Adafruit5x7);  
+        oled.println(F("Initialising..."));
+
+        Serial.println(F("OLED"));
+      }
     }
     else
     {
-      Serial.println(F("missing"));
+      Serial.println(F("empty"));
     }
   }
 }
@@ -430,4 +491,14 @@ byte readRegister(byte r)
   unsigned char v;
   v = Wire.read();
   return v;
+}
+
+/**
+  Calculate free RAM at runtime
+*/
+int getFreeRam() 
+{
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
