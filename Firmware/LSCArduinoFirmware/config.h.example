@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 /* ----------------- General config -------------------------------- */
 /* Debugging */
 #define DEBUG_BUTTONS                 true
@@ -37,5 +40,9 @@ const char *  mqtt_events_topic     = "events";
 #define       WATCHDOG_PULSE_MS       50
 #define       WATCHDOG_RESET_MS       30000
 
-/* OLED */
+/* OLED - ONE and ONLY ONE OLED_TYPE should be defined (comment out an others) */
+//#define       OLED_TYPE_SSD1106                           // mostly the .96"
+#define       OLED_TYPE_SH1106                              // mostly the 1.3"
 #define       OLED_RESET              -1                    // Reset pin (or -1 if sharing Arduino reset pin)
+
+#endif
