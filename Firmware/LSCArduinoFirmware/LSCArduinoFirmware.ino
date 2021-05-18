@@ -44,7 +44,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "3.1"
+#define VERSION "3.2"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -58,6 +58,8 @@
 #include "SSD1306Ascii.h"             // For OLED display
 #include "SSD1306AsciiWire.h"         // For OLED display
 #include "LSC_Button.h"               // For button click handling (embedded)
+#include "LSC_Oled.h"                 // For OLED runtime displays
+
 
 /*--------------------------- Constants ----------------------------------*/
 // Max number of MCP23017 chips supported on an I2C bus
@@ -65,6 +67,9 @@
 
 // Each MCP23017 has 16 inputs
 #define MCP_PIN_COUNT     16
+
+// the time the status line is shown if no new line is requested
+#define MAX_STATUS_TIME   3000
 
 // List of I2C addresses we might be interested in 
 //  - 0x20-0x27 are the possible 8x MCP23017 chips
@@ -88,13 +93,22 @@ char g_mqtt_client_id[16];
 char g_mqtt_lwt_topic[32];
 
 // Buffer used for MQTT payloads
-char g_mqtt_message_buffer[48];
+char g_mqtt_message_buffer[64];
 
 // When reconnecting to MQTT broker backoff in 5s increments
 uint8_t g_mqtt_backoff = 0;
 
 // Last time the watchdog was reset
-uint32_t g_watchdog_last_reset_ms = 0;
+uint32_t g_watchdog_last_reset_ms = 0L;
+
+// last port status for detect port_change for animation
+uint32_t g_port_old = 0L;
+
+// store MCP portAB values -> needed for port animation
+uint16_t g_mcp_io_values[MAX_MCP_COUNT];
+
+// for timeout (clear) of buttom line button status display
+uint32_t g_last_status_display = 0L;
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // OLED
@@ -137,18 +151,11 @@ void setup()
   // Scan the I2C bus for any MCP23017s and initialise them
   scanI2CBus();
 
+  // Display the firmware version and initialise the port display
   if (g_oled_found)
   {
-    oled.clear();
-    oled.println(F("    SuperHouse.TV"));
-    oled.println();
-    oled.set2X();
-    oled.print(F(" LSC v"));
-    oled.print(VERSION);
-    oled.set1X();
-    oled.setCursor(0, 7);
-    oled.print(F(" Free RAM: ")); 
-    oled.println(getFreeRam());
+    LSC_Oled_draw_logo(VERSION);
+    LSC_Oled_draw_ports(g_mcps_found);
   }
    
   // Determine MAC address
@@ -185,6 +192,13 @@ void setup()
   }
   Serial.println(Ethernet.localIP());
 
+  // Display the IP address on the OLED
+  if (g_oled_found)
+  {
+    oled.setCursor(25, 2);
+    oled.print(Ethernet.localIP()); 
+  }
+  
   // Generate device id
   sprintf_P(g_device_id, PSTR("%02X%02X%02X"), mac[3], mac[4], mac[5]);
   Serial.print(F("Device id: "));
@@ -226,13 +240,46 @@ void loop()
     patWatchdog();
 
     // Iterate through each of the MCP23017 input buffers
+    uint32_t port_new = 0L;
     for (uint8_t i = 0; i < MAX_MCP_COUNT; i++)
     {
       if (bitRead(g_mcps_found, i) == 0)
         continue;
 
       uint16_t io_value = mcp23017[i].readGPIOAB();
+      for (uint8_t j = 0; j < 4; j++)
+      {
+        if ((~io_value >> (j * 4)) & 0x000F)
+        {
+          bitSet(port_new, (i * 4) + j);
+        }
+      }
+      
+      // Need to store for port animation
+      g_mcp_io_values[i] = io_value;
       button[i].process(i, io_value);
+    }
+
+    if (g_oled_found)
+    {
+      // Check if port animation update required
+      uint32_t port_changed = g_port_old ^ port_new;
+      if (port_changed)
+      {
+        LSC_Oled_animate(port_changed, port_new, g_mcp_io_values);
+      }
+      g_port_old = port_new;
+
+      // Clear status if timed out
+      if (g_last_status_display)
+      {
+        if ((millis() - g_last_status_display) > MAX_STATUS_TIME)
+        {
+          oled.setCursor(0, 7);
+          oled.clearToEOL();
+          g_last_status_display = 0L;
+        }
+      }
     }
   }
 }
@@ -370,7 +417,11 @@ void buttonPressed(uint8_t id, uint8_t button, uint8_t state)
     oled.print(F(" BUTTON: ")); 
     oled.print(mqtt_button); 
     oled.print(F("  ")); 
-    oled.print(getMqttButtonAction(state));    
+    oled.print(getMqttButtonAction(state));
+    oled.print(F("      ")); 
+    oled.setInvertMode(false);    
+
+    g_last_status_display = millis();    
   }
 
   // Publish event to MQTT
@@ -451,10 +502,21 @@ void scanI2CBus()
         g_oled_found = 1;
 
         // If an OLED was found then initialise
-        #if OLED_RESET >= 0
-          oled.begin(&SH1106_128x64, I2C_ADDRESS[i], OLED_RESET);
-        #else
-          oled.begin(&SH1106_128x64, I2C_ADDRESS[i]);
+        #ifdef OLED_TYPE_SSD1306
+          Serial.print(F("SSD1306 "));
+          #if OLED_RESET >= 0
+            oled.begin(&Adafruit128x64, I2C_ADDRESS[i], OLED_RESET);
+          #else
+            oled.begin(&Adafruit128x64, I2C_ADDRESS[i]);
+          #endif
+        #endif
+        #ifdef OLED_TYPE_SH1106
+          Serial.print(F("SH1106 "));
+          #if OLED_RESET >= 0
+            oled.begin(&SH1106_128x64, I2C_ADDRESS[i], OLED_RESET);
+          #else
+            oled.begin(&SH1106_128x64, I2C_ADDRESS[i]);
+          #endif
         #endif
         
         oled.clear();
@@ -491,14 +553,4 @@ byte readRegister(byte r)
   unsigned char v;
   v = Wire.read();
   return v;
-}
-
-/**
-  Calculate free RAM at runtime
-*/
-int getFreeRam() 
-{
-  extern int __heap_start, *__brkval;
-  int v;
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
