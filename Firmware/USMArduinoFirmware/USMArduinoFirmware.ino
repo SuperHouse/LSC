@@ -563,6 +563,10 @@ void scanI2CBus()
         
         Serial.println(F("MCP23017"));
       }
+      else
+      {
+        Serial.println(F("ignored"));
+      }
     }
     else
     {
