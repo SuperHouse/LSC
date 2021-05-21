@@ -1,20 +1,33 @@
 /**
   Universal State Monitor
   
-  Monitor binary buttons, switches, or contacts and report events.
+  Monitor buttons, switches, or contacts and report associated events.
 
   Uses MCP23017 I2C I/O buffers to detect digital signals being pulled to 
   GND and publishes event reports to an MQTT broker.
 
-  The report is to a topic of the form;
+  The TYPE of each individual input can be configured by publishing
+  an MQTT message to a topic of the form;
 
-    stat/<DEVICEID>/<TYPE><1-96>
+    conf/<DEVICEID>/<INDEX>
+    
+  where;
+  
+    DEVICEID: ID derived from the MAC address of the device
+    INDEX:    index of the input to configure (1-96)
 
-  which is made of the following;
+  The message should be one of BUTTON, SWITCH or CONTACT.
+  A retained message will ensure the USM auto-configures on startup.
+
+  The event report is to a topic of the form;
+
+    stat/<DEVICEID>/<TYPE><INDEX>
+
+  where;
   
     DEVICEID: ID derived from the MAC address of the device
     TYPE:     one of BUTTON, SWITCH or CONTACT
-    1-96:     index of the input causing the event
+    INDEX:    index of the input causing the event (1-96)
 
   The message is a JSON payload of the form; 
 
@@ -22,24 +35,21 @@
 
   where EVENT can be one of (depending on type);
 
-    BUTTON ->  SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
-    SWTICH ->  ON or OFF
-    CONTACT -> OPEN or CLOSED
-    
+    BUTTON:   SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
+    SWTICH:   ON or OFF
+    CONTACT:  OPEN or CLOSED
+
   Compile options:
     Arduino Uno or Arduino Mega 2560
 
   External dependencies. Install using the Arduino library manager:
       "Adafruit_MCP23017"
-      "SSD1306Ascii"
       "PubSubClient" by Nick O'Leary
 
   Bundled dependencies. No need to install separately:
-      "Adafruit SH1106" by wonho-maker, forked from Adafruit SSD1306 library
       "USM_Input" by ben.jones12@gmail.com, forked from mdButton library
-      "USM_Oled" by moin
 
-  More information:
+  Based on the Light Switch Controller hardware found here:
     www.superhouse.tv/lightswitch
 
   Bugs/Features:
@@ -72,12 +82,11 @@
 // Each MCP23017 has 16 inputs
 #define MCP_PIN_COUNT     16
 
-// the time the status line is shown if no new line is requested
-#define MAX_STATUS_TIME   3000
+// Max number of seconds to backoff when trying to connect to MQTT
+#define MAX_BACKOFF_SECS  5
 
 // List of I2C addresses we might be interested in 
 //  - 0x20-0x27 are the possible 8x MCP23017 chips
-//  - 0x3C is the OLED
 const byte I2C_ADDRESS[]  = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 
 /*--------------------------- Global Variables ---------------------------*/
@@ -96,7 +105,7 @@ char g_mqtt_lwt_topic[32];
 // Buffer used for MQTT payloads
 char g_mqtt_message_buffer[80];
 
-// When reconnecting to MQTT broker backoff in 5s increments
+// When reconnecting to MQTT broker backoff in 1s increments
 uint8_t g_mqtt_backoff = 0;
 
 // Last time the watchdog was reset
@@ -272,15 +281,14 @@ boolean mqttConnect()
   }
   else
   {
-    // Backoff reconnects in 5s increments, until a max of 30s
-    uint8_t backoffSecs = g_mqtt_backoff * 5;
-    if (g_mqtt_backoff < 6) g_mqtt_backoff++;
+    // Backoff reconnects in 1s increments, until a max of 10s
+    if (g_mqtt_backoff < MAX_BACKOFF_SECS) g_mqtt_backoff++;
 
     Serial.print(F("failed, retry in "));
-    Serial.print(backoffSecs);
+    Serial.print(g_mqtt_backoff);
     Serial.println(F("s"));
 
-    delay(backoffSecs * 1000);
+    delay(g_mqtt_backoff * 1000);
   }
 
   return success;
@@ -288,11 +296,15 @@ boolean mqttConnect()
 
 void mqttCallback(char * topic, byte * payload, int length) 
 {
+  // we only subscribe to the conf topic for this device 
+  // and only support input 'type' config messages;
+  //   [<BASETOPIC/]conf/<DEVICEID>/<INDEX>  <TYPE>
+
   // tokenise the topic
   char * topicIndex;
   topicIndex = strtok(topic, "/");
 
-  // junk the first few tokens - i.e. conf/<DEVICEID>/<INDEX>
+  // junk the first few tokens
   topicIndex = strtok(NULL, "/");
   topicIndex = strtok(NULL, "/");
 
@@ -301,6 +313,7 @@ void mqttCallback(char * topic, byte * payload, int length)
     topicIndex = strtok(NULL, "/");
   }
 
+  // parse the index and work out which MCP/input
   int index = atoi(topicIndex);
   int mcp = (index - 1) / 16;
   int input = (index - 1) % 16;
@@ -308,11 +321,11 @@ void mqttCallback(char * topic, byte * payload, int length)
   if (ENABLE_DEBUG)
   {
     Serial.print(F("[CONF]"));
-    Serial.print(F(" INDEX:"));
+    Serial.print(F(" INDX:"));
     Serial.print(index);
     Serial.print(F(" TYPE:"));
   }
-  
+
   if (strncmp((char*)payload, "SWITCH", length) == 0)
   {
     usmInput[mcp].setType(input, SWITCH);
@@ -433,16 +446,16 @@ char * getConfigTopic()
   return topic;
 }
 
-char * getEventTopic(uint8_t type, uint8_t index)
+char * getEventTopic(char * inputType, uint8_t index)
 {
   static char topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
-    sprintf_P(topic, PSTR("stat/%s/%s%d"), g_device_id, getInputType(type), index);
+    sprintf_P(topic, PSTR("stat/%s/%s%d"), g_device_id, inputType, index);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/stat/%s/%s%d"), mqtt_base_topic, g_device_id, getInputType(type), index);
+    sprintf_P(topic, PSTR("%s/stat/%s/%s%d"), mqtt_base_topic, g_device_id, inputType, index);
   }
   return topic;
 }
@@ -452,7 +465,7 @@ char * getEventTopic(uint8_t type, uint8_t index)
 */
 void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
 {
-  // Determine the port, channel, and index (1-based)
+  // Determine the port, channel, and index (all 1-based)
   uint8_t mcp = id;
   uint8_t raw_index = (MCP_PIN_COUNT * mcp) + input;
   uint8_t port = (raw_index / 4) + 1;
@@ -467,21 +480,19 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
     Serial.print(F("[EVNT]"));
     Serial.print(F(" PORT:"));
     Serial.print(port);
-    Serial.print(F(" CHANNEL:"));
+    Serial.print(F(" CHAN:"));
     Serial.print(channel);
-    Serial.print(F(" INDEX:"));
+    Serial.print(F(" INDX:"));
     Serial.print(index);
     Serial.print(F(" TYPE:"));
     Serial.print(inputType);
-    Serial.print(F(" EVENT:"));
-    Serial.print(eventType);
-    Serial.print(F(" STATE:"));
-    Serial.println(state);
+    Serial.print(F(" EVNT:"));
+    Serial.println(eventType);
   }
 
   // Publish event to MQTT
-  sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"CHANNEL\":%d, \"INDEX\":%d, \"TYPE\":\"%s\", \"EVENT\":\"%s\"}"), port, channel, index, inputType, eventType);
-  mqtt_client.publish(getEventTopic(type, index), g_mqtt_message_buffer);
+  sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"CHAN\":%d, \"INDX\":%d, \"TYPE\":\"%s\", \"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
+  mqtt_client.publish(getEventTopic(inputType, index), g_mqtt_message_buffer);
 }
 
 /**
