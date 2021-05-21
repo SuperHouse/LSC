@@ -77,7 +77,7 @@
 
 /*--------------------------- Constants ----------------------------------*/
 // Max number of MCP23017 chips supported on an I2C bus
-#define MAX_MCP_COUNT     8
+#define MAX_MCP_COUNT     6
 
 // Each MCP23017 has 16 inputs
 #define MCP_PIN_COUNT     16
