@@ -34,6 +34,9 @@ const uint8_t mqtt_lwt_retain       = 1;
 const char *  mqtt_events_topic     = "events";
 
 /* ----------------- Hardware-specific config ---------------------- */
+/* MCP23017 */
+#define       MCP_COUNT               6                     // Max number of MCP23017 chips (reduces memory)
+
 /* Watchdog */
 #define       ENABLE_WATCHDOG         false
 #define       WATCHDOG_PIN            3                     // Output to pat the watchdog

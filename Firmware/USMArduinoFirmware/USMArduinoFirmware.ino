@@ -16,7 +16,7 @@
     DEVICEID: ID derived from the MAC address of the device
     INDEX:    index of the input to configure (1-96)
 
-  The message should be one of BUTTON, SWITCH or CONTACT.
+  The message should be one of BUTTON, CONTACT, SWITCH or TOGGLE.
   A retained message will ensure the USM auto-configures on startup.
 
   The event report is to a topic of the form;
@@ -36,8 +36,9 @@
   where EVENT can be one of (depending on type);
 
     BUTTON:   SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
-    SWTICH:   ON or OFF
     CONTACT:  OPEN or CLOSED
+    SWTICH:   ON or OFF
+    TOGGLE:   TOGGLE
 
   Compile options:
     Arduino Uno or Arduino Mega 2560
@@ -76,9 +77,6 @@
 #include "USM_Input.h"                // For input handling (embedded)
 
 /*--------------------------- Constants ----------------------------------*/
-// Max number of MCP23017 chips supported on an I2C bus
-#define MAX_MCP_COUNT     6
-
 // Each MCP23017 has 16 inputs
 #define MCP_PIN_COUNT     16
 
@@ -116,10 +114,10 @@ void mqttCallback(char * topic, byte * payload, int length);
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // I/O buffers
-Adafruit_MCP23017 mcp23017[MAX_MCP_COUNT];
+Adafruit_MCP23017 mcp23017[MCP_COUNT];
 
 // Input handlers
-USM_Input usmInput[MAX_MCP_COUNT];
+USM_Input usmInput[MCP_COUNT];
 
 // Ethernet client
 EthernetClient ethernet;
@@ -228,7 +226,7 @@ void loop()
 
     // Iterate through each of the MCP23017 input buffers
     uint32_t port_new = 0L;
-    for (uint8_t i = 0; i < MAX_MCP_COUNT; i++)
+    for (uint8_t i = 0; i < MCP_COUNT; i++)
     {
       if (bitRead(g_mcps_found, i) == 0)
         continue;
@@ -326,20 +324,30 @@ void mqttCallback(char * topic, byte * payload, int length)
     Serial.print(F(" TYPE:"));
   }
 
-  if (strncmp((char*)payload, "SWITCH", length) == 0)
+  if (strncmp((char*)payload, "BUTTON", length) == 0)
   {
-    usmInput[mcp].setType(input, SWITCH);
-    if (ENABLE_DEBUG) { Serial.println("SWITCH"); }
+    usmInput[mcp].setType(input, BUTTON);
+    if (ENABLE_DEBUG) { Serial.println("BUTTON"); }
   }
   else if (strncmp((char*)payload, "CONTACT", length) == 0)
   {
     usmInput[mcp].setType(input, CONTACT);
     if (ENABLE_DEBUG) { Serial.println("CONTACT"); }
   }
+  else if (strncmp((char*)payload, "SWITCH", length) == 0)
+  {
+    usmInput[mcp].setType(input, SWITCH);
+    if (ENABLE_DEBUG) { Serial.println("SWITCH"); }
+  }
+  else if (strncmp((char*)payload, "TOGGLE", length) == 0)
+  {
+    usmInput[mcp].setType(input, TOGGLE);
+    if (ENABLE_DEBUG) { Serial.println("TOGGLE"); }
+  }
   else
   {
-    usmInput[mcp].setType(input, BUTTON);
-    if (ENABLE_DEBUG) { Serial.println("BUTTON"); }
+    // otherwise ignore
+    if (ENABLE_DEBUG) { Serial.println("ERROR"); }
   }
 }
 
@@ -352,11 +360,14 @@ char * getInputType(uint8_t type)
     case BUTTON:
       sprintf_P(inputType, PSTR("BUTTON"));
       break;
+    case CONTACT:
+      sprintf_P(inputType, PSTR("CONTACT"));
+      break;
     case SWITCH:
       sprintf_P(inputType, PSTR("SWITCH"));
       break;
-    case CONTACT:
-      sprintf_P(inputType, PSTR("CONTACT"));
+    case TOGGLE:
+      sprintf_P(inputType, PSTR("TOGGLE"));
       break;
     default:
       sprintf_P(inputType, PSTR("ERROR"));
@@ -397,6 +408,20 @@ char * getEventType(uint8_t type, uint8_t state)
           break;
       }
       break;
+    case CONTACT:
+      switch (state)
+      {
+        case USM_LOW:
+          sprintf_P(eventType, PSTR("CLOSED"));
+          break;
+        case USM_HIGH:
+          sprintf_P(eventType, PSTR("OPEN"));
+          break;
+        default:
+          sprintf_P(eventType, PSTR("ERROR"));
+          break;
+      }
+      break;
     case SWITCH:
       switch (state)
       {
@@ -411,19 +436,8 @@ char * getEventType(uint8_t type, uint8_t state)
           break;
       }
       break;
-    case CONTACT:
-      switch (state)
-      {
-        case USM_LOW:
-          sprintf_P(eventType, PSTR("CLOSED"));
-          break;
-        case USM_HIGH:
-          sprintf_P(eventType, PSTR("OPEN"));
-          break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
-      }
+    case TOGGLE:
+      sprintf_P(eventType, PSTR("TOGGLE"));
       break;
     default:
       sprintf_P(eventType, PSTR("ERROR"));
@@ -546,7 +560,7 @@ void scanI2CBus()
     Wire.beginTransmission(I2C_ADDRESS[i]);
     if (Wire.endTransmission() == 0)
     {
-      if (i < MAX_MCP_COUNT) 
+      if (i < MCP_COUNT) 
       {
         bitWrite(g_mcps_found, i, 1);
         

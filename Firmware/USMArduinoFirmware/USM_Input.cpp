@@ -1,3 +1,4 @@
+
 /*
  * USM_Input.cpp
  * 
@@ -103,7 +104,7 @@ uint8_t * USM_Input::_update(uint16_t value)
         _usmState[i].data.state = IS_LOW;
         _eventTime[i] = 0;
 
-        // for SWITCH or CONTACT inputs send an event since we have transitioned
+        // for CONTACT, SWITCH or TOGGLE inputs send an event since we have transitioned
         if (type != BUTTON)
         {
           state[i] = USM_LOW;
@@ -133,6 +134,8 @@ uint8_t * USM_Input::_update(uint16_t value)
     {
       if (_eventTime[i] > USM_DEBOUNCE_HIGH_TIME) 
       {
+        // for CONTACT, SWITCH or TOGGLE inputs send an event since we have transitioned
+        // otherwise check if we have been holding or increment the click count
         if (type != BUTTON)
         {
           _usmState[i].data.state = IS_HIGH;

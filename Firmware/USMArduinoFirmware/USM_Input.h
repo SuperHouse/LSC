@@ -32,7 +32,7 @@
 #define USM_MAX_CLICKS             5
 
 // Input types
-enum usmType_t { BUTTON, SWITCH, CONTACT };
+enum usmType_t { BUTTON, CONTACT, SWITCH, TOGGLE };
 
 // Input states
 enum usmState_t { IS_HIGH, DEBOUNCE_LOW, IS_LOW, DEBOUNCE_HIGH, AWAIT_MULTI };
@@ -51,7 +51,7 @@ union usmData_t
 // Callback type for onEvent(uint8_t id, uint8_t button, uint8_t state)
 //  * `id` is a custom id (user defined, passed to process()) 
 //  * `input` is the input number (0 -> USM_INPUT_COUNT - 1)
-//  * `type` is one of BUTTON, SWITCH or CONTACT
+//  * `type` is one of BUTTON, CONTACT, SWITCH or TOGGLE
 //  * `state` is one of;
 //    - 1, 2, .. USM_MAX_CLICKS   = number of presses (i.e. multi-click)
 //    - USM_HOLD_STATE            = long press (repeats every BUTTON_HOLD_TIME ms)
