@@ -35,7 +35,8 @@ const char *  mqtt_events_topic     = "events";
 
 /* ----------------- Hardware-specific config ---------------------- */
 /* MCP23017 */
-#define       MCP_COUNT               6                     // Max number of MCP23017 chips (reduces memory)
+#define       MCP_MAX_COUNT           6                     // Max number of supported MCP23017 chips 
+                                                            // Set to 6 for Uno otherwise get low memory warnings
 
 /* Watchdog */
 #define       ENABLE_WATCHDOG         false

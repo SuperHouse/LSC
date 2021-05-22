@@ -114,10 +114,10 @@ void mqttCallback(char * topic, byte * payload, int length);
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // I/O buffers
-Adafruit_MCP23017 mcp23017[MCP_COUNT];
+Adafruit_MCP23017 mcp23017[MCP_MAX_COUNT];
 
 // Input handlers
-USM_Input usmInput[MCP_COUNT];
+USM_Input usmInput[MCP_MAX_COUNT];
 
 // Ethernet client
 EthernetClient ethernet;
@@ -226,7 +226,7 @@ void loop()
 
     // Iterate through each of the MCP23017 input buffers
     uint32_t port_new = 0L;
-    for (uint8_t i = 0; i < MCP_COUNT; i++)
+    for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
     {
       if (bitRead(g_mcps_found, i) == 0)
         continue;
@@ -560,7 +560,7 @@ void scanI2CBus()
     Wire.beginTransmission(I2C_ADDRESS[i]);
     if (Wire.endTransmission() == 0)
     {
-      if (i < MCP_COUNT) 
+      if (i < MCP_MAX_COUNT) 
       {
         bitWrite(g_mcps_found, i, 1);
         
