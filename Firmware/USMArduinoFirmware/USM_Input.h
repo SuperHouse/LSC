@@ -91,7 +91,8 @@ class USM_Input
     usmData_t _usmState[USM_INPUT_COUNT];
 
     // Private methods
-    uint8_t * _update(uint16_t value);
+//    uint8_t * _update(uint16_t value);
+    void _update(uint8_t state[], uint16_t value);
 };
 
 #endif

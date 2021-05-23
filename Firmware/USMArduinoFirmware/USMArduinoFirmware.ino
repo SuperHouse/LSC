@@ -237,11 +237,14 @@ void loop()
   }
 }
 
+
 /**
   MQTT
 */
 boolean mqttConnect()
 {
+  char topic[32];
+
   Serial.print(F("Connecting to MQTT broker..."));
 
   // Attempt to connect, with a LWT if configured
@@ -261,7 +264,7 @@ boolean mqttConnect()
     g_mqtt_backoff = 0;
 
     // subscribe to our config topic
-    mqtt_client.subscribe(getConfigTopic());
+    mqtt_client.subscribe(getConfigTopic(topic));
     
     // Publish LWT so anything listening knows we are alive
     if (ENABLE_MQTT_LWT)
@@ -446,9 +449,9 @@ char * getEventType(uint8_t type, uint8_t state)
   return eventType;
 }
 
-char * getConfigTopic()
+char * getConfigTopic(char topic[])
 {
-  static char topic[32];
+//  static char topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
     sprintf_P(topic, PSTR("conf/%s/+"), g_device_id);
@@ -460,9 +463,9 @@ char * getConfigTopic()
   return topic;
 }
 
-char * getEventTopic(char * inputType, uint8_t index)
+char * getEventTopic(char topic[], char * inputType, uint8_t index)
 {
-  static char topic[32];
+//  static char _topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
     sprintf_P(topic, PSTR("stat/%s/%s%d"), g_device_id, inputType, index);
@@ -489,6 +492,8 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
   char * inputType = getInputType(type);
   char * eventType = getEventType(type, state);
 
+  char topic[32];
+
   if (ENABLE_DEBUG)
   {
     Serial.print(F("[EVNT]"));
@@ -506,7 +511,7 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
 
   // Publish event to MQTT
   sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"CHAN\":%d, \"INDX\":%d, \"TYPE\":\"%s\", \"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
-  mqtt_client.publish(getEventTopic(inputType, index), g_mqtt_message_buffer);
+  mqtt_client.publish(getEventTopic(topic, inputType, index), g_mqtt_message_buffer);
 }
 
 /**

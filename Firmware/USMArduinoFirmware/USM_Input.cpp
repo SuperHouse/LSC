@@ -49,8 +49,10 @@ void USM_Input::onEvent(eventCallback callback)
 
 void USM_Input::process(uint8_t id, uint16_t value) 
 {
+  uint8_t state[USM_INPUT_COUNT];
+
   // Process each input to see what, if any, events have occured
-  uint8_t * state = _update(value);
+  _update(state, value);
 
   // Check if we have a callback to handle the press events
   if (_onEvent) 
@@ -66,9 +68,9 @@ void USM_Input::process(uint8_t id, uint16_t value)
   }
 }  
 
-uint8_t * USM_Input::_update(uint16_t value) 
+void USM_Input::_update(uint8_t state[], uint16_t value) 
 {
-  static uint8_t state[USM_INPUT_COUNT] = {};
+//  static uint8_t state[USM_INPUT_COUNT] = {};
 
   // Work out how long since our last update so we can increment the event times for each button
   uint16_t delta = millis() - _lastUpdateTime;
