@@ -53,8 +53,12 @@ union usmData_t
 //  * `input` is the input number (0 -> USM_INPUT_COUNT - 1)
 //  * `type` is one of BUTTON, CONTACT, SWITCH or TOGGLE
 //  * `state` is one of;
+//    [for BUTTON]
 //    - 1, 2, .. USM_MAX_CLICKS   = number of presses (i.e. multi-click)
-//    - USM_HOLD_STATE            = long press (repeats every BUTTON_HOLD_TIME ms)
+//    - USM_HOLD_STATE            = long press (repeats every USM_HOLD_TIME ms)
+//    [for CONTACT|SWITCH|TOGGLE]
+//    - USM_LOW                   = input is active
+//    - USM_HIGH                  = input is not active
 typedef void (*eventCallback)(uint8_t, uint8_t, uint8_t, uint8_t);
 
 class USM_Input
@@ -66,8 +70,12 @@ class USM_Input
     uint8_t getType(uint8_t input);
     void setType(uint8_t input, uint8_t type);
 
+    // Get/Set the invert flag
+    uint8_t getInvert(uint8_t input);
+    void setInvert(uint8_t input, uint8_t invert);
+
     // Process this set of button values and send events via onButtonPressed
-    void process(uint8_t id, uint16_t button_value);
+    void process(uint8_t id, uint16_t value);
 
     // Set callback function to be called when is button event is detected
     void onEvent(eventCallback);
@@ -75,6 +83,7 @@ class USM_Input
   private:
     // Configuration variables
     uint32_t _usmType;
+    uint16_t _usmInvert;
 
     // Input event callback
     eventCallback _onEvent;
@@ -91,7 +100,7 @@ class USM_Input
     usmData_t _usmState[USM_INPUT_COUNT];
 
     // Private methods
-//    uint8_t * _update(uint16_t value);
+    uint8_t _getValue(uint16_t value, uint8_t input);
     void _update(uint8_t state[], uint16_t value);
 };
 

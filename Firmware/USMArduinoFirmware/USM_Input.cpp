@@ -17,8 +17,9 @@ USM_Input::USM_Input()
   _lastUpdateTime = 0;
   for (uint8_t i = 0; i < USM_INPUT_COUNT; i++)
   {
-    // Default all inputs to buttons
+    // Default all inputs to buttons (non-inverted)
     setType(i, BUTTON);
+    setInvert(i, 0);
 
     // Assume all inputs are in-active - i.e. HIGH
     _usmState[i].data.state = IS_HIGH;
@@ -42,6 +43,20 @@ void USM_Input::setType(uint8_t input, uint8_t type)
   _usmType = (_usmType & mask) | ((uint32_t)type << (input * 2));
 }
 
+uint8_t USM_Input::getInvert(uint8_t input)
+{
+  // shifts the desired 1 bit to the right most position then masks the LSB
+  return (_usmInvert >> input) & 0x0001L;
+}
+
+void USM_Input::setInvert(uint8_t input, uint8_t invert)
+{
+  // sets a mask with the 1 bit we want to change to 0  
+  uint32_t mask = ~(0x01L << input);
+  // '& mask' clears, then '| (..)' sets the desired type at desired location 
+  _usmInvert = (_usmInvert & mask) | ((uint16_t)invert << input);
+}
+
 void USM_Input::onEvent(eventCallback callback)
 { 
   _onEvent = callback; 
@@ -49,9 +64,8 @@ void USM_Input::onEvent(eventCallback callback)
 
 void USM_Input::process(uint8_t id, uint16_t value) 
 {
-  uint8_t state[USM_INPUT_COUNT];
-
   // Process each input to see what, if any, events have occured
+  uint8_t state[USM_INPUT_COUNT];
   _update(state, value);
 
   // Check if we have a callback to handle the press events
@@ -68,10 +82,15 @@ void USM_Input::process(uint8_t id, uint16_t value)
   }
 }  
 
+uint8_t USM_Input::_getValue(uint16_t value, uint8_t input)
+{
+  uint8_t bit = bitRead(value, input);
+  if (getInvert(input)) { bit = !bit; }
+  return bit;
+}
+
 void USM_Input::_update(uint8_t state[], uint16_t value) 
 {
-//  static uint8_t state[USM_INPUT_COUNT] = {};
-
   // Work out how long since our last update so we can increment the event times for each button
   uint16_t delta = millis() - _lastUpdateTime;
   _lastUpdateTime = millis();
@@ -92,7 +111,7 @@ void USM_Input::_update(uint8_t state[], uint16_t value)
     if (_usmState[i].data.state == IS_HIGH) 
     {
       _usmState[i].data.clicks = 0;
-      if (bitRead(value, i) == LOW) 
+      if (_getValue(value, i) == LOW) 
       {
         _usmState[i].data.state = DEBOUNCE_LOW;
         _eventTime[i] = 0;
@@ -116,7 +135,7 @@ void USM_Input::_update(uint8_t state[], uint16_t value)
     // IS_LOW
     else if (_usmState[i].data.state == IS_LOW) 
     {
-      if (bitRead(value, i) == HIGH) 
+      if (_getValue(value, i) == HIGH) 
       {
         _usmState[i].data.state = DEBOUNCE_HIGH;
         _eventTime[i] = 0;
@@ -162,7 +181,7 @@ void USM_Input::_update(uint8_t state[], uint16_t value)
     // AWAIT_MULTI
     else if (_usmState[i].data.state == AWAIT_MULTI) 
     { 
-      if (bitRead(value, i) == LOW) 
+      if (_getValue(value, i) == LOW) 
       {
         _usmState[i].data.state = DEBOUNCE_LOW;
         _eventTime[i] = 0;

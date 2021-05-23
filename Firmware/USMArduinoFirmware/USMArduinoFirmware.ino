@@ -9,25 +9,34 @@
   The TYPE of each individual input can be configured by publishing
   an MQTT message to a topic of the form;
 
-    conf/<DEVICEID>/<INDEX>
+    [BASETOPIC/]conf/<DEVICEID>/<INDEX>
     
   where;
+
+    BASETOPIC:  Optional base topic prepended to device topics
+    DEVICEID:   ID derived from the MAC address of the device
+    INDEX:      Index of the input to configure (1-96)
+    
+  The message should be a JSON payload of the form;
   
-    DEVICEID: ID derived from the MAC address of the device
-    INDEX:    index of the input to configure (1-96)
+    {"TYPE":"CONTACT", "INVT":1}
 
-  The message should be one of BUTTON, CONTACT, SWITCH or TOGGLE.
+  where;
+
+    TYPE:       Optional, one of BUTTON, CONTACT, SWITCH or TOGGLE.
+    INVT:       Optional, set to 1 if events should be inverted
+    
   A retained message will ensure the USM auto-configures on startup.
-
+  
   The event report is to a topic of the form;
 
-    stat/<DEVICEID>/<TYPE><INDEX>
+    [BASETOPIC/]stat/<DEVICEID>/<INDEX>
 
   where;
   
-    DEVICEID: ID derived from the MAC address of the device
-    TYPE:     one of BUTTON, SWITCH or CONTACT
-    INDEX:    index of the input causing the event (1-96)
+    BASETOPIC:  Optional base topic prepended to device topics
+    DEVICEID:   ID derived from the MAC address of the device
+    INDEX:      Index of the input causing the event (1-96)
 
   The message is a JSON payload of the form; 
 
@@ -35,16 +44,17 @@
 
   where EVENT can be one of (depending on type);
 
-    BUTTON:   SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
-    CONTACT:  OPEN or CLOSED
-    SWTICH:   ON or OFF
-    TOGGLE:   TOGGLE
+    BUTTON:     SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
+    CONTACT:    OPEN or CLOSED
+    SWTICH:     ON or OFF
+    TOGGLE:     TOGGLE
 
   Compile options:
     Arduino Uno or Arduino Mega 2560
 
   External dependencies. Install using the Arduino library manager:
       "Adafruit_MCP23017"
+      "ArduinoJSON"
       "PubSubClient" by Nick O'Leary
 
   Bundled dependencies. No need to install separately:
@@ -73,6 +83,7 @@
 #include <Wire.h>                     // For I2C
 #include <Ethernet.h>                 // For networking
 #include <PubSubClient.h>             // For MQTT
+#include <ArduinoJson.h>              // For MQTT message parsing
 #include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
 #include "USM_Input.h"                // For input handling (embedded)
 
@@ -85,7 +96,7 @@
 
 // List of I2C addresses we might be interested in 
 //  - 0x20-0x27 are the possible 8x MCP23017 chips
-const byte I2C_ADDRESS[]  = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+byte I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 
 /*--------------------------- Global Variables ---------------------------*/
 // Each bit corresponds to an MCP found on the IC2 bus
@@ -99,9 +110,6 @@ char g_mqtt_client_id[16];
 
 // LWT published to <mqtt_lwt_base_topic>/<mqtt_client_id>
 char g_mqtt_lwt_topic[32];
-
-// Buffer used for MQTT payloads
-char g_mqtt_message_buffer[80];
 
 // When reconnecting to MQTT broker backoff in 1s increments
 uint8_t g_mqtt_backoff = 0;
@@ -237,14 +245,11 @@ void loop()
   }
 }
 
-
 /**
   MQTT
 */
 boolean mqttConnect()
 {
-  char topic[32];
-
   Serial.print(F("Connecting to MQTT broker..."));
 
   // Attempt to connect, with a LWT if configured
@@ -264,6 +269,7 @@ boolean mqttConnect()
     g_mqtt_backoff = 0;
 
     // subscribe to our config topic
+    char topic[32];
     mqtt_client.subscribe(getConfigTopic(topic));
     
     // Publish LWT so anything listening knows we are alive
@@ -271,13 +277,6 @@ boolean mqttConnect()
     {
       byte lwt_payload[] = { '1' };
       mqtt_client.publish(g_mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
-    }
-
-    // Publish a message on the events topic to indicate startup
-    if (ENABLE_MQTT_EVENTS)
-    {
-      sprintf_P(g_mqtt_message_buffer, PSTR("%s online"), g_mqtt_client_id);
-      mqtt_client.publish(mqtt_events_topic, g_mqtt_message_buffer);
     }
   }
   else
@@ -297,15 +296,16 @@ boolean mqttConnect()
 
 void mqttCallback(char * topic, byte * payload, int length) 
 {
-  // we only subscribe to the conf topic for this device 
-  // and only support input 'type' config messages;
-  //   [<BASETOPIC/]conf/<DEVICEID>/<INDEX>  <TYPE>
+  // We only subscribe to the conf topic for this device at;
+  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>
+  // where the message should be of the form;
+  //    {"TYPE":"<TYPE>", "INVT":1|0}
 
-  // tokenise the topic
+  // Tokenise the topic
   char * topicIndex;
   topicIndex = strtok(topic, "/");
 
-  // junk the first few tokens
+  // Junk the first few tokens
   topicIndex = strtok(NULL, "/");
   topicIndex = strtok(NULL, "/");
 
@@ -314,10 +314,39 @@ void mqttCallback(char * topic, byte * payload, int length)
     topicIndex = strtok(NULL, "/");
   }
 
-  // parse the index and work out which MCP/input
+  // Parse the index and work out which MCP/input
   int index = atoi(topicIndex);
   int mcp = (index - 1) / 16;
   int input = (index - 1) % 16;
+
+  // Parse the JSON payload
+  StaticJsonDocument<32> json;
+  deserializeJson(json, payload, length);
+
+  if (json.containsKey("TYPE"))
+  {
+    if (strcmp(json["TYPE"], "BUTTON") == 0)
+    {
+      usmInput[mcp].setType(input, BUTTON);
+    }
+    else if (strcmp(json["TYPE"], "CONTACT") == 0)
+    {
+      usmInput[mcp].setType(input, CONTACT);
+    }
+    else if (strcmp(json["TYPE"], "SWITCH") == 0)
+    {
+      usmInput[mcp].setType(input, SWITCH);
+    }
+    else if (strcmp(json["TYPE"], "TOGGLE") == 0)
+    {
+      usmInput[mcp].setType(input, TOGGLE);
+    }
+  }
+
+  if (json.containsKey("INVT"))
+  {
+    usmInput[mcp].setInvert(input, (uint8_t)json["INVT"]);
+  }
 
   if (ENABLE_DEBUG)
   {
@@ -325,32 +354,9 @@ void mqttCallback(char * topic, byte * payload, int length)
     Serial.print(F(" INDX:"));
     Serial.print(index);
     Serial.print(F(" TYPE:"));
-  }
-
-  if (strncmp((char*)payload, "BUTTON", length) == 0)
-  {
-    usmInput[mcp].setType(input, BUTTON);
-    if (ENABLE_DEBUG) { Serial.println("BUTTON"); }
-  }
-  else if (strncmp((char*)payload, "CONTACT", length) == 0)
-  {
-    usmInput[mcp].setType(input, CONTACT);
-    if (ENABLE_DEBUG) { Serial.println("CONTACT"); }
-  }
-  else if (strncmp((char*)payload, "SWITCH", length) == 0)
-  {
-    usmInput[mcp].setType(input, SWITCH);
-    if (ENABLE_DEBUG) { Serial.println("SWITCH"); }
-  }
-  else if (strncmp((char*)payload, "TOGGLE", length) == 0)
-  {
-    usmInput[mcp].setType(input, TOGGLE);
-    if (ENABLE_DEBUG) { Serial.println("TOGGLE"); }
-  }
-  else
-  {
-    // otherwise ignore
-    if (ENABLE_DEBUG) { Serial.println("ERROR"); }
+    Serial.print(getInputType(usmInput[mcp].getType(input)));
+    Serial.print(F(" INVT:"));
+    Serial.println(usmInput[mcp].getInvert(input));
   }
 }
 
@@ -451,7 +457,6 @@ char * getEventType(uint8_t type, uint8_t state)
 
 char * getConfigTopic(char topic[])
 {
-//  static char topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
     sprintf_P(topic, PSTR("conf/%s/+"), g_device_id);
@@ -463,16 +468,15 @@ char * getConfigTopic(char topic[])
   return topic;
 }
 
-char * getEventTopic(char topic[], char * inputType, uint8_t index)
+char * getEventTopic(char topic[], uint8_t index)
 {
-//  static char _topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
-    sprintf_P(topic, PSTR("stat/%s/%s%d"), g_device_id, inputType, index);
+    sprintf_P(topic, PSTR("stat/%s/%d"), g_device_id, index);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/stat/%s/%s%d"), mqtt_base_topic, g_device_id, inputType, index);
+    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_device_id, index);
   }
   return topic;
 }
@@ -482,36 +486,33 @@ char * getEventTopic(char topic[], char * inputType, uint8_t index)
 */
 void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
 {
-  // Determine the port, channel, and index (all 1-based)
+  // Determine the 0-based index of the input
   uint8_t mcp = id;
   uint8_t raw_index = (MCP_PIN_COUNT * mcp) + input;
-  uint8_t port = (raw_index / 4) + 1;
-  uint8_t channel = (input % 4) + 1;
-  uint8_t index = raw_index + 1;
-  
-  char * inputType = getInputType(type);
-  char * eventType = getEventType(type, state);
 
-  char topic[32];
+  // We report the port, channel and index as 1-based numbers
+  uint8_t index = raw_index + 1;
+
+  // Create JSON payload
+  StaticJsonDocument<64> json;
+  json["PORT"] = (raw_index / 4) + 1;
+  json["CHAN"] = (input % 4) + 1;
+  json["INDX"] = index;
+  json["TYPE"] = getInputType(type);
+  json["EVNT"] = getEventType(type, state);
+  
+  char message[80];
+  serializeJson(json, message);
 
   if (ENABLE_DEBUG)
   {
-    Serial.print(F("[EVNT]"));
-    Serial.print(F(" PORT:"));
-    Serial.print(port);
-    Serial.print(F(" CHAN:"));
-    Serial.print(channel);
-    Serial.print(F(" INDX:"));
-    Serial.print(index);
-    Serial.print(F(" TYPE:"));
-    Serial.print(inputType);
-    Serial.print(F(" EVNT:"));
-    Serial.println(eventType);
+    Serial.print(F("[EVNT] "));
+    Serial.println(message);
   }
 
   // Publish event to MQTT
-  sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"CHAN\":%d, \"INDX\":%d, \"TYPE\":\"%s\", \"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
-  mqtt_client.publish(getEventTopic(topic, inputType, index), g_mqtt_message_buffer);
+  char topic[32];
+  mqtt_client.publish(getEventTopic(topic, index), message);
 }
 
 /**

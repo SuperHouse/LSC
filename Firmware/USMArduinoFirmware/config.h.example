@@ -30,9 +30,6 @@ const char *  mqtt_lwt_base_topic   = "clients";            // Max 15 chars with
 const uint8_t mqtt_lwt_qos          = 0;
 const uint8_t mqtt_lwt_retain       = 1;
 
-#define       ENABLE_MQTT_EVENTS      true
-const char *  mqtt_events_topic     = "events";
-
 /* ----------------- Hardware-specific config ---------------------- */
 /* MCP23017 */
 #define       MCP_MAX_COUNT           6                     // Max number of supported MCP23017 chips 
