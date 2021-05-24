@@ -6,28 +6,39 @@
   Uses MCP23017 I2C I/O buffers to detect digital signals being pulled to 
   GND and publishes event reports to an MQTT broker.
 
-  The TYPE of each individual input can be configured by publishing
-  an MQTT message to a topic of the form;
+  The configuration of each individual input can be set by publishing
+  an MQTT message to one of these topics;
 
-    conf/<DEVICEID>/<INDEX>
+    [BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
+    [BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
     
   where;
-  
-    DEVICEID: ID derived from the MAC address of the device
-    INDEX:    index of the input to configure (1-96)
 
-  The message should be one of BUTTON, CONTACT, SWITCH or TOGGLE.
+    BASETOPIC   Optional base topic prepended to device topics
+    DEVICEID    ID derived from the MAC address of the device
+    INDEX       Index of the input to configure (1-96)
+    
+  The message should be;
+
+    /type       One of BUTTON, CONTACT, SWITCH or TOGGLE
+    /invt       Either 0 or 1 (to invert event)
+    
+  A null or empty message will reset the input to;
+
+    /type       BUTTON
+    /invt       0 (non-inverted)
+    
   A retained message will ensure the USM auto-configures on startup.
-
+  
   The event report is to a topic of the form;
 
-    stat/<DEVICEID>/<TYPE><INDEX>
+    [BASETOPIC/]stat/<DEVICEID>/<INDEX>
 
   where;
   
-    DEVICEID: ID derived from the MAC address of the device
-    TYPE:     one of BUTTON, SWITCH or CONTACT
-    INDEX:    index of the input causing the event (1-96)
+    BASETOPIC   Optional base topic prepended to device topics
+    DEVICEID    ID derived from the MAC address of the device
+    INDEX       Index of the input causing the event (1-96)
 
   The message is a JSON payload of the form; 
 
@@ -35,10 +46,10 @@
 
   where EVENT can be one of (depending on type);
 
-    BUTTON:   SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
-    CONTACT:  OPEN or CLOSED
-    SWTICH:   ON or OFF
-    TOGGLE:   TOGGLE
+    BUTTON      SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
+    CONTACT     OPEN or CLOSED
+    SWTICH      ON or OFF
+    TOGGLE      TOGGLE
 
   Compile options:
     Arduino Uno or Arduino Mega 2560
@@ -85,7 +96,7 @@
 
 // List of I2C addresses we might be interested in 
 //  - 0x20-0x27 are the possible 8x MCP23017 chips
-const byte I2C_ADDRESS[]  = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+byte I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 
 /*--------------------------- Global Variables ---------------------------*/
 // Each bit corresponds to an MCP found on the IC2 bus
@@ -99,9 +110,6 @@ char g_mqtt_client_id[16];
 
 // LWT published to <mqtt_lwt_base_topic>/<mqtt_client_id>
 char g_mqtt_lwt_topic[32];
-
-// Buffer used for MQTT payloads
-char g_mqtt_message_buffer[80];
 
 // When reconnecting to MQTT broker backoff in 1s increments
 uint8_t g_mqtt_backoff = 0;
@@ -237,14 +245,11 @@ void loop()
   }
 }
 
-
 /**
   MQTT
 */
 boolean mqttConnect()
 {
-  char topic[32];
-
   Serial.print(F("Connecting to MQTT broker..."));
 
   // Attempt to connect, with a LWT if configured
@@ -263,7 +268,8 @@ boolean mqttConnect()
     Serial.println(F("success"));
     g_mqtt_backoff = 0;
 
-    // subscribe to our config topic
+    // Subscribe to our config topics
+    char topic[32];
     mqtt_client.subscribe(getConfigTopic(topic));
     
     // Publish LWT so anything listening knows we are alive
@@ -271,13 +277,6 @@ boolean mqttConnect()
     {
       byte lwt_payload[] = { '1' };
       mqtt_client.publish(g_mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
-    }
-
-    // Publish a message on the events topic to indicate startup
-    if (ENABLE_MQTT_EVENTS)
-    {
-      sprintf_P(g_mqtt_message_buffer, PSTR("%s online"), g_mqtt_client_id);
-      mqtt_client.publish(mqtt_events_topic, g_mqtt_message_buffer);
     }
   }
   else
@@ -297,15 +296,21 @@ boolean mqttConnect()
 
 void mqttCallback(char * topic, byte * payload, int length) 
 {
-  // we only subscribe to the conf topic for this device 
-  // and only support input 'type' config messages;
-  //   [<BASETOPIC/]conf/<DEVICEID>/<INDEX>  <TYPE>
+  // We support config updates published to the following topics;
+  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
+  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
+  // where the message should be;
+  //    /type     One of BUTTON, CONTACT, SWITCH or TOGGLE
+  //    /invt     Either 0 or 1
+  // and a null or empty message will default to;
+  //    /type     BUTTON
+  //    /invt     0
 
-  // tokenise the topic
+  // Tokenise the topic
   char * topicIndex;
   topicIndex = strtok(topic, "/");
 
-  // junk the first few tokens
+  // Junk the first few tokens
   topicIndex = strtok(NULL, "/");
   topicIndex = strtok(NULL, "/");
 
@@ -314,7 +319,7 @@ void mqttCallback(char * topic, byte * payload, int length)
     topicIndex = strtok(NULL, "/");
   }
 
-  // parse the index and work out which MCP/input
+  // Parse the index and work out which MCP/input
   int index = atoi(topicIndex);
   int mcp = (index - 1) / 16;
   int input = (index - 1) % 16;
@@ -324,33 +329,65 @@ void mqttCallback(char * topic, byte * payload, int length)
     Serial.print(F("[CONF]"));
     Serial.print(F(" INDX:"));
     Serial.print(index);
-    Serial.print(F(" TYPE:"));
   }
 
-  if (strncmp((char*)payload, "BUTTON", length) == 0)
+  // Parse the config type
+  topicIndex = strtok(NULL, "/");
+  char * configType = topicIndex;
+
+  // Parse the message and update the config
+  if (strncmp(configType, "type", 4) == 0)
   {
-    usmInput[mcp].setType(input, BUTTON);
-    if (ENABLE_DEBUG) { Serial.println("BUTTON"); }
+    if (ENABLE_DEBUG) { Serial.print(F(" TYPE:")); }
+
+    if (length == 0 || strncmp((char*)payload, "BUTTON", length) == 0)
+    {
+      usmInput[mcp].setType(input, BUTTON);
+      if (ENABLE_DEBUG) { Serial.println(F("BUTTON")); }
+    }
+    else if (strncmp((char*)payload, "CONTACT", length) == 0)
+    {
+      usmInput[mcp].setType(input, CONTACT);
+      if (ENABLE_DEBUG) { Serial.println(F("CONTACT")); }
+    }
+    else if (strncmp((char*)payload, "SWITCH", length) == 0)
+    {
+      usmInput[mcp].setType(input, SWITCH);
+      if (ENABLE_DEBUG) { Serial.println(F("SWITCH")); }
+    }
+    else if (strncmp((char*)payload, "TOGGLE", length) == 0)
+    {
+      usmInput[mcp].setType(input, TOGGLE);
+      if (ENABLE_DEBUG) { Serial.println(F("TOGGLE")); }
+    }
+    else
+    {
+      if (ENABLE_DEBUG) { Serial.println(F("ERROR")); }
+    }
   }
-  else if (strncmp((char*)payload, "CONTACT", length) == 0)
+  else if (strncmp(configType, "invt", 4) == 0)
   {
-    usmInput[mcp].setType(input, CONTACT);
-    if (ENABLE_DEBUG) { Serial.println("CONTACT"); }
-  }
-  else if (strncmp((char*)payload, "SWITCH", length) == 0)
-  {
-    usmInput[mcp].setType(input, SWITCH);
-    if (ENABLE_DEBUG) { Serial.println("SWITCH"); }
-  }
-  else if (strncmp((char*)payload, "TOGGLE", length) == 0)
-  {
-    usmInput[mcp].setType(input, TOGGLE);
-    if (ENABLE_DEBUG) { Serial.println("TOGGLE"); }
+    if (ENABLE_DEBUG) { Serial.print(F(" INVT:")); }
+    
+    if (length == 0 || strncmp((char*)payload, "0", length) == 0)
+    {
+      usmInput[mcp].setInvert(input, 0);
+      if (ENABLE_DEBUG) { Serial.println(0); }
+    }
+    else if (strncmp((char*)payload, "1", length) == 0)
+    {
+      usmInput[mcp].setInvert(input, 1);
+      if (ENABLE_DEBUG) { Serial.println(1); }
+    }
+    else
+    {
+      if (ENABLE_DEBUG) { Serial.println(F("ERROR")); }
+    }
   }
   else
   {
-    // otherwise ignore
-    if (ENABLE_DEBUG) { Serial.println("ERROR"); }
+    if (ENABLE_DEBUG) { Serial.print(F(" INVALID:")); }
+    if (ENABLE_DEBUG) { Serial.println(configType); }
   }
 }
 
@@ -451,28 +488,26 @@ char * getEventType(uint8_t type, uint8_t state)
 
 char * getConfigTopic(char topic[])
 {
-//  static char topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
-    sprintf_P(topic, PSTR("conf/%s/+"), g_device_id);
+    sprintf_P(topic, PSTR("conf/%s/+/+"), g_device_id);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/conf/%s/+"), mqtt_base_topic, g_device_id);
+    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), mqtt_base_topic, g_device_id);
   }
   return topic;
 }
 
-char * getEventTopic(char topic[], char * inputType, uint8_t index)
+char * getEventTopic(char topic[], uint8_t index)
 {
-//  static char _topic[32];
   if (strlen(mqtt_base_topic) == 0)
   {
-    sprintf_P(topic, PSTR("stat/%s/%s%d"), g_device_id, inputType, index);
+    sprintf_P(topic, PSTR("stat/%s/%d"), g_device_id, index);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/stat/%s/%s%d"), mqtt_base_topic, g_device_id, inputType, index);
+    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_device_id, index);
   }
   return topic;
 }
@@ -492,15 +527,9 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
   char * inputType = getInputType(type);
   char * eventType = getEventType(type, state);
 
-  char topic[32];
-
   if (ENABLE_DEBUG)
   {
     Serial.print(F("[EVNT]"));
-    Serial.print(F(" PORT:"));
-    Serial.print(port);
-    Serial.print(F(" CHAN:"));
-    Serial.print(channel);
     Serial.print(F(" INDX:"));
     Serial.print(index);
     Serial.print(F(" TYPE:"));
@@ -509,9 +538,13 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
     Serial.println(eventType);
   }
 
+  // Build JSON payload for this event
+  char message[64];
+  sprintf_P(message, PSTR("{\"PORT\":%d,\"CHAN\":%d,\"INDX\":%d,\"TYPE\":\"%s\",\"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
+
   // Publish event to MQTT
-  sprintf_P(g_mqtt_message_buffer, PSTR("{\"PORT\":%d, \"CHAN\":%d, \"INDX\":%d, \"TYPE\":\"%s\", \"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
-  mqtt_client.publish(getEventTopic(topic, inputType, index), g_mqtt_message_buffer);
+  char topic[32];
+  mqtt_client.publish(getEventTopic(topic, index), message);
 }
 
 /**
