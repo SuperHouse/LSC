@@ -74,7 +74,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.0"
+#define VERSION "4.1"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -86,6 +86,7 @@
 #include <PubSubClient.h>             // For MQTT
 #include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
 #include "USM_Input.h"                // For input handling (embedded)
+#include "USM_Oled.h"                 // For OLED runtime displays
 
 /*--------------------------- Constants ----------------------------------*/
 // Each MCP23017 has 16 inputs
@@ -102,6 +103,9 @@ byte I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
 // Each bit corresponds to an MCP found on the IC2 bus
 uint8_t g_mcps_found = 0;
 
+// Was an OLED found on the I2C bus
+byte g_oled_found = 0;
+
 // Unique device id (last 3 HEX pairs of MAC address)
 char g_device_id[7];
 
@@ -116,6 +120,15 @@ uint8_t g_mqtt_backoff = 0;
 
 // Last time the watchdog was reset
 uint32_t g_watchdog_last_reset_ms = 0L;
+
+// store MCP portAB values -> needed for port animation
+uint16_t g_mcp_io_values[MCP_MAX_COUNT];
+
+// for timeout (clear) of bottom line input event display
+uint32_t g_last_event_display = 0L;
+
+// for timeout (dim) of OLED
+uint32_t g_last_oled_trigger = 0L;
 
 /*--------------------------- Function Signatures ------------------------*/
 void mqttCallback(char * topic, byte * payload, int length);
@@ -132,6 +145,9 @@ EthernetClient ethernet;
 
 // MQTT client
 PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, ethernet);
+
+// OLED
+SSD1306AsciiWire oled;
 
 /*--------------------------- Program ------------------------------------*/
 /**
@@ -157,6 +173,13 @@ void setup()
 
   // Scan the I2C bus for any MCP23017s and initialise them
   scanI2CBus();
+
+  // Display the firmware version and initialise the port display
+  if (g_oled_found)
+  {
+    USM_Oled_draw_logo(VERSION);
+    USM_Oled_draw_ports(g_mcps_found);
+  }
 
   // Determine MAC address
   byte mac[6];
@@ -191,6 +214,15 @@ void setup()
     Ethernet.begin(mac, static_ip, static_dns);
   }
   Serial.println(Ethernet.localIP());
+
+  if (g_oled_found)
+  {
+    oled.setCursor(25, 2);
+    oled.print(Ethernet.localIP()); 
+    oled.setCursor(25, 3);
+    oled.print(mac_address); 
+  }
+
 
   // Generate device id
   sprintf_P(g_device_id, PSTR("%02X%02X%02X"), mac[3], mac[4], mac[5]);
@@ -233,14 +265,64 @@ void loop()
     patWatchdog();
 
     // Iterate through each of the MCP23017 input buffers
-    uint32_t port_new = 0L;
+    uint32_t port_changed = 0L;
     for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
     {
       if (bitRead(g_mcps_found, i) == 0)
         continue;
 
       uint16_t io_value = mcp23017[i].readGPIOAB();
+      uint16_t tmp = io_value ^ g_mcp_io_values[i]; // compare recent w last stored
+      for (uint8_t j = 0; j < 4; j++)
+      {
+        if ((tmp >> (j * 4)) & 0x000F)
+        {
+          bitSet(port_changed, (i * 4) + j);
+        }
+      }
+      g_mcp_io_values[i] = io_value;  // Need to store for port animation
       usmInput[i].process(i, io_value);
+    }
+    // update OLED port animation 
+    if (g_oled_found)
+    {
+      // Check if port animation update required
+      if (port_changed)
+      {
+        oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
+        oled.setContrast(OLED_CONTRAST_ON);
+        g_last_oled_trigger = millis(); 
+   
+        USM_Oled_animate(port_changed, g_mcp_io_values);
+      }
+
+      // Clear event display if timed out
+      if (g_last_event_display)
+      {
+        if ((millis() - g_last_event_display) > OLED_SHOW_EVENT_TIME)
+        {
+          oled.setCursor(0, 7);
+          oled.clearToEOL();
+          g_last_event_display = 0L;
+        }
+      }
+
+      // dim OLED if timed out
+      if (g_last_oled_trigger)
+      {
+        if ((millis() - g_last_oled_trigger) > OLED_TIME_ON)
+        {
+          if (OLED_CONTRAST_DIM == 0)   // turn OLED OFF if OLED_CONTRAST_DIM is set to 0
+          {
+            oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
+          }
+          else
+          { 
+            oled.setContrast(OLED_CONTRAST_DIM);
+          }
+          g_last_oled_trigger = 0L;
+        }
+      }
     }
   }
 }
@@ -538,8 +620,21 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
     Serial.println(eventType);
   }
 
-  // Build JSON payload for this event
   char message[64];
+  if (g_oled_found)
+  {
+    // Show last input event on buttom line
+    oled.setCursor(0, 7);
+    oled.clearToEOL();
+    oled.setInvertMode(true);
+    sprintf_P(message, PSTR("IDX:%2d %s %s   "), index, inputType, eventType);
+    oled.print(message); 
+    oled.setInvertMode(false);    
+    g_last_event_display = millis(); 
+  }
+
+
+  // Build JSON payload for this event
   sprintf_P(message, PSTR("{\"PORT\":%d,\"CHAN\":%d,\"INDX\":%d,\"TYPE\":\"%s\",\"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
 
   // Publish event to MQTT
@@ -588,6 +683,7 @@ void scanI2CBus()
 {
   Serial.println(F("Scanning for devices on the I2C bus..."));
 
+  // scan for MCP's
   for (uint8_t i = 0; i < sizeof(I2C_ADDRESS); i++)
   {
     Serial.print(F(" - 0x"));
@@ -619,6 +715,49 @@ void scanI2CBus()
       {
         Serial.println(F("ignored"));
       }
+    }
+    else
+    {
+      Serial.println(F("empty"));
+    }
+  }
+  
+  if (ENABLE_OLED)
+  {
+    // scan for OLED   
+    Serial.print(F(" - 0x"));
+    Serial.print(OLED_I2C_ADDRESS, HEX);
+    Serial.print(F("..."));
+  
+    // Check if OLED is anything responding
+    Wire.beginTransmission(OLED_I2C_ADDRESS);
+    if (Wire.endTransmission() == 0)
+    {
+       g_oled_found = 1;
+      
+      // If OLED was found then initialise
+      #ifdef OLED_TYPE_SSD1306
+        Serial.print(F("SSD1306 "));
+        #if OLED_RESET >= 0
+          oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS, OLED_RESET);
+        #else
+          oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
+        #endif
+      #endif
+      #ifdef OLED_TYPE_SH1106
+        Serial.print(F("SH1106 "));
+        #if OLED_RESET >= 0
+          oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS, OLED_RESET);
+        #else
+          oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS);
+        #endif
+      #endif
+      
+      oled.clear();
+      oled.setFont(Adafruit5x7);  
+      oled.println(F("Initialising..."));
+      
+      Serial.println(F("OLED"));
     }
     else
     {

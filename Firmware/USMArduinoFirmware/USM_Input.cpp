@@ -46,13 +46,13 @@ void USM_Input::setType(uint8_t input, uint8_t type)
 uint8_t USM_Input::getInvert(uint8_t input)
 {
   // shifts the desired 1 bit to the right most position then masks the LSB
-  return (_usmInvert >> input) & 0x0001L;
+  return (_usmInvert >> input) & 0x0001;
 }
 
 void USM_Input::setInvert(uint8_t input, uint8_t invert)
 {
   // sets a mask with the 1 bit we want to change to 0  
-  uint32_t mask = ~(0x01L << input);
+  uint16_t mask = ~(0x0001 << input);
   // '& mask' clears, then '| (..)' sets the desired type at desired location 
   _usmInvert = (_usmInvert & mask) | ((uint16_t)invert << input);
 }

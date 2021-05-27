@@ -40,4 +40,17 @@ const uint8_t mqtt_lwt_retain       = 1;
 #define       WATCHDOG_PULSE_MS       50
 #define       WATCHDOG_RESET_MS       30000
 
+/* OLED - ONE and ONLY ONE OLED_TYPE should be defined (comment out an others) */
+#define       ENABLE_OLED           true
+//#define       OLED_TYPE_SSD1306                           // mostly the .96"
+#define       OLED_TYPE_SH1106                              // mostly the 1.3"
+#define       OLED_I2C_ADDRESS      0x3c                    // I2c address of OLED used
+#define       OLED_RESET            -1                      // Reset pin (or -1 if sharing Arduino reset pin)
+#define       OLED_CONTRAST_DIM     5                       // OLED contrast when dimmed (0 == OFF)
+#define       OLED_CONTRAST_ON      128                     // OLED contrast when normal (on)
+#define       OLED_TIME_ON          10000                   // OLED time in msec with brightness ON after trigger
+#define       OLED_SHOW_EVENT_TIME  3000                    // the time in ms the event line is shown if no new event occured
+
+
+
 #endif
