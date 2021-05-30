@@ -20,7 +20,7 @@
     
   The message should be;
 
-    /type       One of BUTTON, CONTACT, SWITCH or TOGGLE
+    /type       One of BUTTON, CONTACT, ROTARY, SWITCH or TOGGLE
     /invt       Either 0 or 1 (to invert event)
     
   A null or empty message will reset the input to;
@@ -48,6 +48,7 @@
 
     BUTTON      SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
     CONTACT     OPEN or CLOSED
+    ROTARY      UP or DOWN
     SWTICH      ON or OFF
     TOGGLE      TOGGLE
 
@@ -57,9 +58,11 @@
   External dependencies. Install using the Arduino library manager:
       "Adafruit_MCP23017"
       "PubSubClient" by Nick O'Leary
+      "SSD1306Ascii"
 
   Bundled dependencies. No need to install separately:
       "USM_Input" by ben.jones12@gmail.com, forked from mdButton library
+      "USM_Oled" by moinmoin-sh
 
   Based on the Light Switch Controller hardware found here:
     www.superhouse.tv/lightswitch
@@ -390,7 +393,7 @@ void mqttCallback(char * topic, byte * payload, int length)
   //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
   //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
   // where the message should be;
-  //    /type     One of BUTTON, CONTACT, SWITCH or TOGGLE
+  //    /type     One of BUTTON, CONTACT, ROTARY, SWITCH or TOGGLE
   //    /invt     Either 0 or 1
   // and a null or empty message will default to;
   //    /type     BUTTON
@@ -439,6 +442,11 @@ void mqttCallback(char * topic, byte * payload, int length)
     {
       usmInput[mcp].setType(input, CONTACT);
       if (ENABLE_DEBUG) { Serial.println(F("CONTACT")); }
+    }
+    else if (strncmp((char*)payload, "ROTARY", length) == 0)
+    {
+      usmInput[mcp].setType(input, ROTARY);
+      if (ENABLE_DEBUG) { Serial.println(F("ROTARY")); }
     }
     else if (strncmp((char*)payload, "SWITCH", length) == 0)
     {
@@ -493,6 +501,9 @@ char * getInputType(uint8_t type)
     case CONTACT:
       sprintf_P(inputType, PSTR("CONTACT"));
       break;
+    case ROTARY:
+      sprintf_P(inputType, PSTR("ROTARY"));
+      break;
     case SWITCH:
       sprintf_P(inputType, PSTR("SWITCH"));
       break;
@@ -515,7 +526,7 @@ char * getEventType(uint8_t type, uint8_t state)
     case BUTTON:
       switch (state)
       {
-        case USM_HOLD_STATE:
+        case USM_HOLD_EVENT:
           sprintf_P(eventType, PSTR("HOLD"));
           break;
         case 1:
@@ -546,6 +557,20 @@ char * getEventType(uint8_t type, uint8_t state)
           break;
         case USM_HIGH:
           sprintf_P(eventType, PSTR("OPEN"));
+          break;
+        default:
+          sprintf_P(eventType, PSTR("ERROR"));
+          break;
+      }
+      break;
+    case ROTARY:
+      switch (state)
+      {
+        case USM_LOW:
+          sprintf_P(eventType, PSTR("UP"));
+          break;
+        case USM_HIGH:
+          sprintf_P(eventType, PSTR("DOWN"));
           break;
         default:
           sprintf_P(eventType, PSTR("ERROR"));
