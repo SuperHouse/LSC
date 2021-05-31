@@ -132,7 +132,7 @@ class USM_Input
 
   private:
     // Configuration variables
-    uint32_t _usmType;
+    uint32_t _usmType[2];
     uint16_t _usmInvert;
 
     // Input event callback
