@@ -653,7 +653,7 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
     Serial.println(eventType);
   }
 
-  char message[64];
+  char message[66];
   if (g_oled_found)
   {
     // Show last input event on buttom line
