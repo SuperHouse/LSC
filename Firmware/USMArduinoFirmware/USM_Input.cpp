@@ -228,6 +228,4 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
       }
     }
   }
-
-  return event;
 }    
