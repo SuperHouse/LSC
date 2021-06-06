@@ -208,10 +208,16 @@ void setup()
   byte mac[6];
   
 #if defined (ESP8266) || defined (ESP32)
- 
-  //  WiFi.config(ip, gw, sn);
-  WiFi.mode(WIFI_STA);    // to do : enable static IP
-  //  WiFi.hostname(HostName);  // to do : enable own hostname
+  if (!ENABLE_DHCP)
+  {
+    Serial.print(F("Using static IP address: "));
+    WiFi.config(IPAddress(static_ip), IPAddress(static_dns), IPAddress(static_dns));
+  }
+  else
+  {
+    Serial.print(F("Getting IP address via DHCP: "));
+  }
+  WiFi.mode(WIFI_STA); 
   WiFi.begin(wifi_ssid, wifi_password);
   uint8_t retry = 20;
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -221,7 +227,7 @@ void setup()
       ESP.restart();
     }
   }
-  Serial.println("WiFi connected !");
+  Serial.print("WiFi connected !  ");
   Serial.println(WiFi.localIP());
   WiFi.macAddress(mac);
 
@@ -304,12 +310,26 @@ void setup()
 */
 void loop()
 {
+#if defined (ESP8266) || defined (ESP32)
+  // Check if still connected, if not -> reconnect -> if no success -> reboot
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print("Connecting to ");
+    Serial.print(wifi_ssid);
+    Serial.println("...");
+    WiFi.begin(wifi_ssid, wifi_password);
+    if (WiFi.waitForConnectResult() != WL_CONNECTED)
+    {
+      delay(2000);
+      ESP.restart();
+    }
+    Serial.println("WiFi connected");
+  }
+      
+#else
   // Check our DHCP lease is still ok
-  #if defined (ESP8266) || defined (ESP32)
-        // to do : implement WiFi-up check and mqtt-up
-  #else
   Ethernet.maintain();
-  #endif
+#endif
 
   // Process anything on MQTT and reconnect if necessary
   if (mqtt_client.loop() || mqttConnect())
