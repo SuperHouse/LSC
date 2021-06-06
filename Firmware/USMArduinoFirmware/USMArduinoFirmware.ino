@@ -84,8 +84,14 @@
 #include "config.h"
 
 /*--------------------------- Libraries ----------------------------------*/
+#if defined (ESP8266)
+  #include <ESP8266WiFi.h> 
+#elif defined (ESP32) 
+  #include <WiFi.h>
+#else
+  #include <Ethernet.h>               // For networking  
+#endif
 #include <Wire.h>                     // For I2C
-#include <Ethernet.h>                 // For networking
 #include <PubSubClient.h>             // For MQTT
 #include "Adafruit_MCP23017.h"        // For MCP23017 I/O buffers
 #include "USM_Input.h"                // For input handling (embedded)
@@ -143,11 +149,19 @@ Adafruit_MCP23017 mcp23017[MCP_MAX_COUNT];
 // Input handlers
 USM_Input usmInput[MCP_MAX_COUNT];
 
-// Ethernet client
-EthernetClient ethernet;
-
-// MQTT client
-PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, ethernet);
+#if defined (ESP8266) || defined (ESP32)
+  // Wifi client
+  WiFiClient wificlient;
+  
+  // MQTT client over Wifi
+  PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, wificlient);
+#else
+  // Ethernet client
+  EthernetClient ethernet;
+  
+  // MQTT client over Ethernet
+  PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, ethernet);
+#endif
 
 // OLED
 SSD1306AsciiWire oled;
@@ -159,7 +173,14 @@ SSD1306AsciiWire oled;
 void setup()
 {
   // Start the I2C bus
+  #if defined (ESP32)
+  #define I2C_SDA   14    // to do : need this for my crippled ESP32
+  #define I2C_SCL   15    // to do : check if this is general required
+  Wire.begin(I2C_SDA, I2C_SCL);
+  Wire.setClock(100000L);
+  #else
   Wire.begin();
+  #endif
 
   // Startup logging to serial
   Serial.begin(SERIAL_BAUD_RATE);
@@ -183,9 +204,29 @@ void setup()
     USM_Oled_draw_logo(VERSION);
     USM_Oled_draw_ports(g_mcps_found);
   }
-
-  // Determine MAC address
+  
   byte mac[6];
+  
+#if defined (ESP8266) || defined (ESP32)
+ 
+  //  WiFi.config(ip, gw, sn);
+  WiFi.mode(WIFI_STA);    // to do : enable static IP
+  //  WiFi.hostname(HostName);  // to do : enable own hostname
+  WiFi.begin(wifi_ssid, wifi_password);
+  uint8_t retry = 20;
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    delay(500);
+    if (retry-- == 0) {
+      Serial.println("Connection Failed! Rebooting...");
+      ESP.restart();
+    }
+  }
+  Serial.println("WiFi connected !");
+  Serial.println(WiFi.localIP());
+  WiFi.macAddress(mac);
+
+#else
+  // Determine MAC address
   if (ENABLE_MAC_ADDRESS_ROM)
   {
     Serial.print(F("Getting MAC address from ROM: "));
@@ -201,9 +242,6 @@ void setup()
     Serial.print(F("Using static MAC address: "));
     memcpy(mac, static_mac, sizeof(mac));
   }
-  char mac_address[18];
-  sprintf_P(mac_address, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  Serial.println(mac_address);
 
   // Set up Ethernet
   if (ENABLE_DHCP)
@@ -217,16 +255,24 @@ void setup()
     Ethernet.begin(mac, static_ip, static_dns);
   }
   Serial.println(Ethernet.localIP());
+#endif
+
+  char mac_address[18];
+  sprintf_P(mac_address, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  Serial.println(mac_address);
 
   // Display IP and MAC addresses
   if (g_oled_found)
   {
     oled.setCursor(25, 2);
+    #if defined (ESP8266) || defined (ESP32)
+    oled.print(WiFi.localIP()); 
+    #else
     oled.print(Ethernet.localIP()); 
+    #endif
     oled.setCursor(25, 3);
     oled.print(mac_address); 
   }
-
   // Generate device id
   sprintf_P(g_device_id, PSTR("%02X%02X%02X"), mac[3], mac[4], mac[5]);
   Serial.print(F("Device id: "));
@@ -259,7 +305,11 @@ void setup()
 void loop()
 {
   // Check our DHCP lease is still ok
+  #if defined (ESP8266) || defined (ESP32)
+        // to do : implement WiFi-up check and mqtt-up
+  #else
   Ethernet.maintain();
+  #endif
 
   // Process anything on MQTT and reconnect if necessary
   if (mqtt_client.loop() || mqttConnect())

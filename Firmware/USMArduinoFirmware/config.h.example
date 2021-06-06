@@ -25,6 +25,12 @@ const char *  mqtt_username         = "YOUR USERNAME";
 const char *  mqtt_password         = "YOUR PASSWORD";
 const char *  mqtt_base_topic       = "usm";                // Max 15 chars with NO trailing '/', optional
 
+/* WiFi */
+#if defined (ESP8266) || defined (ESP32)
+const char*   wifi_ssid             = "YOUR WIFI SSID";      // set to your SSID
+const char*   wifi_password         = "YOUR WIFI PASSWORD";  // set to your wifi password
+#endif
+
 #define       ENABLE_MQTT_LWT         false
 const char *  mqtt_lwt_base_topic   = "clients";            // Max 15 chars with NO trailing '/'
 const uint8_t mqtt_lwt_qos          = 0;
