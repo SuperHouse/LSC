@@ -90,7 +90,7 @@ union usmData_t
   uint8_t _data;
   struct 
   {
-    usmState_t state : 4;
+    uint8_t state : 4;
     uint8_t clicks : 4;
   } data;
 };
