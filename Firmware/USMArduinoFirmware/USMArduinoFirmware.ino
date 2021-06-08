@@ -233,7 +233,7 @@ void setup()
   Serial.println(g_device_id);
 
   // Generate MQTT client id, unless one is explicitly defined
-  if (strlen(mqtt_client_id) == 0)
+  if (mqtt_client_id == NULL)
   {
     sprintf_P(g_mqtt_client_id, PSTR("USM-%s"), g_device_id);  
   }
@@ -309,7 +309,7 @@ void loop()
       // Clear event display if timed out
       if (g_last_event_display)
       {
-        if ((millis() - g_last_event_display) > OLED_SHOW_EVENT_TIME)
+        if ((millis() - g_last_event_display) > OLED_EVENT_MS)
         {
           oled.setCursor(0, 7);
           oled.clearToEOL();
@@ -320,7 +320,7 @@ void loop()
       // Dim OLED if timed out
       if (g_last_oled_trigger)
       {
-        if ((millis() - g_last_oled_trigger) > OLED_TIME_ON)
+        if ((millis() - g_last_oled_trigger) > OLED_ON_MS)
         {
           // Turn OLED OFF if OLED_CONTRAST_DIM is set to 0
           if (OLED_CONTRAST_DIM == 0)
@@ -407,7 +407,7 @@ void mqttCallback(char * topic, byte * payload, int length)
   topicIndex = strtok(NULL, "/");
   topicIndex = strtok(NULL, "/");
 
-  if (strlen(mqtt_base_topic) > 0)
+  if (mqtt_base_topic != NULL)
   {
     topicIndex = strtok(NULL, "/");
   }
@@ -603,7 +603,7 @@ char * getEventType(uint8_t type, uint8_t state)
 
 char * getConfigTopic(char topic[])
 {
-  if (strlen(mqtt_base_topic) == 0)
+  if (mqtt_base_topic == NULL)
   {
     sprintf_P(topic, PSTR("conf/%s/+/+"), g_device_id);
   }
@@ -616,7 +616,7 @@ char * getConfigTopic(char topic[])
 
 char * getEventTopic(char topic[], uint8_t index)
 {
-  if (strlen(mqtt_base_topic) == 0)
+  if (mqtt_base_topic == NULL)
   {
     sprintf_P(topic, PSTR("stat/%s/%d"), g_device_id, index);
   }
@@ -768,16 +768,16 @@ void scanI2CBus()
     // If OLED was found then initialise
     #ifdef OLED_TYPE_SSD1306
       Serial.print(F("SSD1306 "));
-      #if OLED_RESET >= 0
-        oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS, OLED_RESET);
+      #if OLED_RESET_PIN >= 0
+        oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS, OLED_RESET_PIN);
       #else
         oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
       #endif
     #endif
     #ifdef OLED_TYPE_SH1106
       Serial.print(F("SH1106 "));
-      #if OLED_RESET >= 0
-        oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS, OLED_RESET);
+      #if OLED_RESET_PIN >= 0
+        oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS, OLED_RESET_PIN);
       #else
         oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS);
       #endif
