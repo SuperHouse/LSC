@@ -18,11 +18,11 @@ const byte    static_ip[]           = { 192, 168, 1, 35 };                    //
 const byte    static_dns[]          = { 192, 168, 1, 1 };                     // Use if DHCP disabled
 
 /* MQTT */
-const char *  mqtt_broker           = "192.168.1.185";      // IP address or host name of your MQTT broker
+const char *  mqtt_broker           = "test.mosquitto.org"; // IP address or host name of your MQTT broker
 const int     mqtt_port             = 1883;
 const char *  mqtt_client_id        = NULL;                 // Max 15 chars, optional
-const char *  mqtt_username         = "YOUR USERNAME";      // Optional, NULL if no authentication
-const char *  mqtt_password         = "YOUR PASSWORD";      // Optional, NULL if no authentication
+const char *  mqtt_username         = NULL;                 // Optional, NULL if no authentication
+const char *  mqtt_password         = NULL;                 // Optional, NULL if no authentication
 const char *  mqtt_base_topic       = "usm";                // Max 15 chars with NO trailing '/', optional
 
 #define       ENABLE_MQTT_LWT         false
