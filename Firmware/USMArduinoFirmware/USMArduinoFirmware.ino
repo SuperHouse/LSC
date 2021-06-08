@@ -9,13 +9,13 @@
   The configuration of each individual input can be set by publishing
   an MQTT message to one of these topics;
 
-    [BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
-    [BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
+    [BASETOPIC/]conf/<CLIENTID>/<INDEX>/type
+    [BASETOPIC/]conf/<CLIENTID>/<INDEX>/invt
     
   where;
 
     BASETOPIC   Optional base topic prepended to device topics
-    DEVICEID    ID derived from the MAC address of the device
+    CLIENTID    Client id of device, defaults to USM-<MAC ADDRESS>
     INDEX       Index of the input to configure (1-96)
     
   The message should be;
@@ -32,12 +32,12 @@
   
   The event report is to a topic of the form;
 
-    [BASETOPIC/]stat/<DEVICEID>/<INDEX>
+    [BASETOPIC/]stat/<CLIENTID>/<INDEX>
 
   where;
   
     BASETOPIC   Optional base topic prepended to device topics
-    DEVICEID    ID derived from the MAC address of the device
+    CLIENTID    Client id of device, defaults to USM-<MAC ADDRESS>
     INDEX       Index of the input causing the event (1-96)
 
   The message is a JSON payload of the form; 
@@ -109,10 +109,7 @@ uint8_t g_mcps_found = 0;
 // Was an OLED found on the I2C bus
 byte g_oled_found = 0;
 
-// Unique device id (last 3 HEX pairs of MAC address)
-char g_device_id[7];
-
-// If no mqtt_client_id set in config.h defaults to "USM-<g_device_id>"
+// If no mqtt_client_id set in config.h defaults to "USM-<MAC ADDRESS>"
 char g_mqtt_client_id[16];
 
 // LWT published to <mqtt_lwt_base_topic>/<mqtt_client_id>
@@ -227,15 +224,10 @@ void setup()
     oled.print(mac_address); 
   }
 
-  // Generate device id
-  sprintf_P(g_device_id, PSTR("%02X%02X%02X"), mac[3], mac[4], mac[5]);
-  Serial.print(F("Device id: "));
-  Serial.println(g_device_id);
-
   // Generate MQTT client id, unless one is explicitly defined
   if (mqtt_client_id == NULL)
   {
-    sprintf_P(g_mqtt_client_id, PSTR("USM-%s"), g_device_id);  
+    sprintf_P(g_mqtt_client_id, PSTR("USM-%02X%02X%02X"), mac[3], mac[4], mac[5]);  
   }
   else
   {
@@ -390,8 +382,8 @@ boolean mqttConnect()
 void mqttCallback(char * topic, byte * payload, int length) 
 {
   // We support config updates published to the following topics;
-  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
-  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
+  //    [<BASETOPIC/]conf/<CLIENTID>/<INDEX>/type
+  //    [<BASETOPIC/]conf/<CLIENTID>/<INDEX>/invt
   // where the message should be;
   //    /type     One of BUTTON, CONTACT, ROTARY, SWITCH or TOGGLE
   //    /invt     Either 0 or 1
@@ -605,11 +597,11 @@ char * getConfigTopic(char topic[])
 {
   if (mqtt_base_topic == NULL)
   {
-    sprintf_P(topic, PSTR("conf/%s/+/+"), g_device_id);
+    sprintf_P(topic, PSTR("conf/%s/+/+"), g_mqtt_client_id);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), mqtt_base_topic, g_device_id);
+    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), mqtt_base_topic, g_mqtt_client_id);
   }
   return topic;
 }
@@ -618,11 +610,11 @@ char * getEventTopic(char topic[], uint8_t index)
 {
   if (mqtt_base_topic == NULL)
   {
-    sprintf_P(topic, PSTR("stat/%s/%d"), g_device_id, index);
+    sprintf_P(topic, PSTR("stat/%s/%d"), g_mqtt_client_id, index);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_device_id, index);
+    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_mqtt_client_id, index);
   }
   return topic;
 }
