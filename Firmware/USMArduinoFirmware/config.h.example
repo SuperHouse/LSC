@@ -18,6 +18,8 @@ const byte    static_ip[]           = { 192, 168, 1, 35 };                    //
 const byte    static_dns[]          = { 192, 168, 1, 1 };                     // Use if DHCP disabled
 
 /* MQTT */
+#define       MQTT_BACKOFF_SECS       5                     // How long to increase the backoff timer each time we fail to connect
+#define       MQTT_MAX_BACKOFF_COUNT  12                    // Max number of backoffs (i.e. longest backoff is MQTT_BACKOFF_SECS * MQTT_MAX_BACKOFF_COUNT)
 const char *  mqtt_broker           = "test.mosquitto.org"; // IP address or host name of your MQTT broker
 const int     mqtt_port             = 1883;
 const char *  mqtt_client_id        = NULL;                 // Max 15 chars, optional

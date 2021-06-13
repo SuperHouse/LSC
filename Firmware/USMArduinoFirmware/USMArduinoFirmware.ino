@@ -77,7 +77,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.1"
+#define VERSION "4.2"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -93,10 +93,7 @@
 
 /*--------------------------- Constants ----------------------------------*/
 // Each MCP23017 has 16 inputs
-#define MCP_PIN_COUNT     16
-
-// Max number of seconds to backoff when trying to connect to MQTT
-#define MAX_BACKOFF_SECS  5
+#define MCP_PIN_COUNT       16
 
 // List of I2C addresses we might be interested in 
 //  - 0x20-0x27 are the possible 8x MCP23017 chips
@@ -115,8 +112,11 @@ char g_mqtt_client_id[16];
 // LWT published to <mqtt_lwt_base_topic>/<mqtt_client_id>
 char g_mqtt_lwt_topic[32];
 
-// When reconnecting to MQTT broker backoff in 1s increments
+// When reconnecting to MQTT broker backoff in increasing intervals
 uint8_t g_mqtt_backoff = 0;
+
+// Last time we attempted to reconnect to MQTT
+uint32_t g_mqtt_last_reconnect_ms = 0L;
 
 // Last time the watchdog was reset
 uint32_t g_watchdog_last_reset_ms = 0L;
@@ -253,90 +253,82 @@ void loop()
   // Check our DHCP lease is still ok
   Ethernet.maintain();
 
-  // Process anything on MQTT and reconnect if necessary
-  if (mqtt_client.loop() || mqttConnect())
+  // Check our MQTT broker connection is still ok
+  mqttMaintain();
+
+  // Iterate through each of the MCP23017 input buffers
+  uint32_t port_changed = 0L;
+  for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
   {
-    // Pat the watchdog since we are connected to MQTT
-    patWatchdog();
+    if (bitRead(g_mcps_found, i) == 0)
+      continue;
 
-    // Iterate through each of the MCP23017 input buffers
-    uint32_t port_changed = 0L;
-    for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
+    // Read the values for all 16 inputs on this MCP
+    uint16_t io_value = mcp23017[i].readGPIOAB();
+
+    // Compare with last stored value
+    uint16_t tmp = io_value ^ g_mcp_io_values[i];
+    for (uint8_t j = 0; j < 4; j++)
     {
-      if (bitRead(g_mcps_found, i) == 0)
-        continue;
-
-      uint16_t io_value = mcp23017[i].readGPIOAB();
-
-      // Compare with last stored value
-      uint16_t tmp = io_value ^ g_mcp_io_values[i];
-      for (uint8_t j = 0; j < 4; j++)
+      if ((tmp >> (j * 4)) & 0x000F)
       {
-        if ((tmp >> (j * 4)) & 0x000F)
-        {
-          bitSet(port_changed, (i * 4) + j);
-        }
-      }
-
-      // Need to store for port animation
-      g_mcp_io_values[i] = io_value;
-
-      // Check for any input events
-      usmInput[i].process(i, io_value);
-    }
-    
-    // Update OLED port animation 
-    if (g_oled_found)
-    {
-      // Check if port animation update required
-      if (port_changed)
-      {
-        oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
-        oled.setContrast(OLED_CONTRAST_ON);
-        g_last_oled_trigger = millis(); 
-   
-        USM_Oled_animate(port_changed, g_mcp_io_values);
-      }
-
-      // Clear event display if timed out
-      if (g_last_event_display)
-      {
-        if ((millis() - g_last_event_display) > OLED_EVENT_MS)
-        {
-          oled.setCursor(0, 7);
-          oled.clearToEOL();
-          g_last_event_display = 0L;
-        }
-      }
-
-      // Dim OLED if timed out
-      if (g_last_oled_trigger)
-      {
-        if ((millis() - g_last_oled_trigger) > OLED_ON_MS)
-        {
-          // Turn OLED OFF if OLED_CONTRAST_DIM is set to 0
-          if (OLED_CONTRAST_DIM == 0)
-          {
-            oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
-          }
-          else
-          { 
-            oled.setContrast(OLED_CONTRAST_DIM);
-          }
-          g_last_oled_trigger = 0L;
-        }
+        bitSet(port_changed, (i * 4) + j);
       }
     }
+
+    // Need to store so we can detect changes for port animation
+    g_mcp_io_values[i] = io_value;
+
+    // Check for any input events
+    usmInput[i].process(i, io_value);
   }
+  
+  // Update OLED port animation 
+  updateOled(port_changed);
+
+  // Pat the watchdog once our processing loop completes
+  patWatchdog();
 }
 
 /**
   MQTT
 */
+void mqttMaintain()
+{
+  if (mqtt_client.loop())
+  {
+    // Currently connected so ensure we are ready to reconnect if it drops
+    g_mqtt_backoff = 0;
+    g_mqtt_last_reconnect_ms = millis();    
+  }
+  else
+  {
+    // Calculate the backoff interval and check if we need to try again
+    uint32_t mqtt_backoff_ms = (uint32_t)g_mqtt_backoff * MQTT_BACKOFF_SECS * 1000;
+    if ((millis() - g_mqtt_last_reconnect_ms) > mqtt_backoff_ms)
+    {
+      Serial.print(F("Connecting to MQTT broker..."));
+
+      if (mqttConnect()) 
+      {
+        Serial.println(F("success"));
+      }
+      else
+      {
+        // Reconnection failed, so backoff
+        g_mqtt_backoff = min(g_mqtt_backoff, MQTT_MAX_BACKOFF_COUNT - 1) + 1;
+        g_mqtt_last_reconnect_ms = millis();
+
+        Serial.print(F("failed, retry in "));
+        Serial.print(g_mqtt_backoff * MQTT_BACKOFF_SECS);
+        Serial.println(F("s"));
+      }
+    }
+  }
+}
+
 boolean mqttConnect()
 {
-  Serial.print(F("Connecting to MQTT broker..."));
-
   // Attempt to connect, with a LWT if configured
   boolean success;
   if (ENABLE_MQTT_LWT)
@@ -350,11 +342,8 @@ boolean mqttConnect()
 
   if (success)
   {
-    Serial.println(F("success"));
-    g_mqtt_backoff = 0;
-
     // Subscribe to our config topics
-    char topic[32];
+    char topic[42];
     mqtt_client.subscribe(getConfigTopic(topic));
     
     // Publish LWT so anything listening knows we are alive
@@ -363,17 +352,6 @@ boolean mqttConnect()
       byte lwt_payload[] = { '1' };
       mqtt_client.publish(g_mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
     }
-  }
-  else
-  {
-    // Backoff reconnects in 1s increments, until a max of 10s
-    if (g_mqtt_backoff < MAX_BACKOFF_SECS) g_mqtt_backoff++;
-
-    Serial.print(F("failed, retry in "));
-    Serial.print(g_mqtt_backoff);
-    Serial.println(F("s"));
-
-    delay(g_mqtt_backoff * 1000);
   }
 
   return success;
@@ -481,10 +459,10 @@ void mqttCallback(char * topic, byte * payload, int length)
   }
 }
 
-char * getInputType(uint8_t type)
+void getInputType(char inputType[], uint8_t type)
 {
   // Determine what type of input we have
-  static char inputType[8];
+  sprintf_P(inputType, PSTR("ERROR"));
   switch (type)
   {
     case BUTTON:
@@ -502,17 +480,13 @@ char * getInputType(uint8_t type)
     case TOGGLE:
       sprintf_P(inputType, PSTR("TOGGLE"));
       break;
-    default:
-      sprintf_P(inputType, PSTR("ERROR"));
-      break;
   }
-  return inputType;
 }
 
-char * getEventType(uint8_t type, uint8_t state)
+void getEventType(char eventType[], uint8_t type, uint8_t state)
 {
   // Determine what event we need to publish
-  static char eventType[7];
+  sprintf_P(eventType, PSTR("ERROR"));
   switch (type)
   {
     case BUTTON:
@@ -536,9 +510,6 @@ char * getEventType(uint8_t type, uint8_t state)
         case 5:
           sprintf_P(eventType, PSTR("PENTA"));
           break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
       }
       break;
     case CONTACT:
@@ -549,9 +520,6 @@ char * getEventType(uint8_t type, uint8_t state)
           break;
         case USM_HIGH:
           sprintf_P(eventType, PSTR("OPEN"));
-          break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
           break;
       }
       break;
@@ -564,9 +532,6 @@ char * getEventType(uint8_t type, uint8_t state)
         case USM_HIGH:
           sprintf_P(eventType, PSTR("DOWN"));
           break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
       }
       break;
     case SWITCH:
@@ -578,19 +543,12 @@ char * getEventType(uint8_t type, uint8_t state)
         case USM_HIGH:
           sprintf_P(eventType, PSTR("OFF"));
           break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
       }
       break;
     case TOGGLE:
       sprintf_P(eventType, PSTR("TOGGLE"));
       break;
-    default:
-      sprintf_P(eventType, PSTR("ERROR"));
-      break;
   }
-  return eventType;
 }
 
 char * getConfigTopic(char topic[])
@@ -620,6 +578,56 @@ char * getEventTopic(char topic[], uint8_t index)
 }
 
 /**
+  OLED
+*/
+void updateOled(uint32_t port_changed)
+{
+  if (g_oled_found)
+  {
+    // Check if port animation update required
+    if (port_changed)
+    {
+      oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
+      oled.setContrast(OLED_CONTRAST_ON);
+      g_last_oled_trigger = millis(); 
+ 
+      USM_Oled_animate(port_changed, g_mcp_io_values);
+    }
+
+    // Clear event display if timed out
+    if (g_last_event_display)
+    {
+      if ((millis() - g_last_event_display) > OLED_EVENT_MS)
+      {
+        oled.setCursor(0, 7);
+        oled.clearToEOL();
+        
+        g_last_event_display = 0L;
+      }
+    }
+
+    // Dim OLED if timed out
+    if (g_last_oled_trigger)
+    {
+      if ((millis() - g_last_oled_trigger) > OLED_ON_MS)
+      {
+        // Turn OLED OFF if OLED_CONTRAST_DIM is set to 0
+        if (OLED_CONTRAST_DIM == 0)
+        {
+          oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
+        }
+        else
+        { 
+          oled.setContrast(OLED_CONTRAST_DIM);
+        }
+        
+        g_last_oled_trigger = 0L;
+      }
+    }
+  } 
+}
+
+/**
   Button handlers
 */
 void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
@@ -631,8 +639,10 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
   uint8_t channel = (input % 4) + 1;
   uint8_t index = raw_index + 1;
   
-  char * inputType = getInputType(type);
-  char * eventType = getEventType(type, state);
+  char inputType[8];
+  getInputType(inputType, type);
+  char eventType[7];
+  getEventType(eventType, type, state);
 
   if (ENABLE_DEBUG)
   {
@@ -658,12 +668,19 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
     g_last_event_display = millis(); 
   }
 
-  // Build JSON payload for this event
-  sprintf_P(message, PSTR("{\"PORT\":%d,\"CHAN\":%d,\"INDX\":%d,\"TYPE\":\"%s\",\"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
-
-  // Publish event to MQTT
-  char topic[32];
-  mqtt_client.publish(getEventTopic(topic, index), message);
+  if (mqtt_client.connected())
+  {
+    // Build JSON payload for this event
+    sprintf_P(message, PSTR("{\"PORT\":%d,\"CHAN\":%d,\"INDX\":%d,\"TYPE\":\"%s\",\"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
+  
+    // Publish event to MQTT
+    char topic[42];
+    mqtt_client.publish(getEventTopic(topic, index), message);
+  }
+  else
+  {
+    Serial.println("FAILOVER!!!");    
+  }
 }
 
 /**
