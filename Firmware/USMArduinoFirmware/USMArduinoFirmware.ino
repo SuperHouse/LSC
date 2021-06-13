@@ -54,6 +54,8 @@
 
   Compile options:
     Arduino Uno or Arduino Mega 2560
+    If using an Uno (or clone) suggest setting MCP_MAX_COUNT = 6 as any
+    more than that starts to cause "Low memory" warnings in the compiler
 
   External dependencies. Install using the Arduino library manager:
       "Adafruit_MCP23017"
@@ -61,7 +63,7 @@
       "SSD1306Ascii"
 
   Bundled dependencies. No need to install separately:
-      "USM_Input" by ben.jones12@gmail.com, forked from mdButton library
+      "USM_Input" by ben.jones12@gmail.com, based on mdButton library
       "USM_Oled" by moinmoin-sh
 
   Based on the Light Switch Controller hardware found here:
@@ -70,7 +72,9 @@
   Bugs/Features:
    - See GitHub issues list.
 
-  Written by Jonathan Oxer for www.superhouse.tv
+  Written by Ben & Moin on behalf of Jon Oxer for www.superhouse.tv
+    https://github.com/sumnerboy12/
+    https://github.com/moinmoin-sh/
     https://github.com/superhouse/
 
   Copyright 2019-2021 SuperHouse Automation Pty Ltd
