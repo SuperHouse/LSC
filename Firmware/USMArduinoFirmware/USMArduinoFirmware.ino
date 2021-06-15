@@ -190,12 +190,12 @@ void setup()
   if (ENABLE_MAC_ADDRESS_ROM)
   {
     Serial.print(F("Getting MAC address from ROM: "));
-    mac[0] = readRegister(0xFA);
-    mac[1] = readRegister(0xFB);
-    mac[2] = readRegister(0xFC);
-    mac[3] = readRegister(0xFD);
-    mac[4] = readRegister(0xFE);
-    mac[5] = readRegister(0xFF);
+    mac[0] = readRegister(MAC_I2C_ADDRESS, 0xFA);
+    mac[1] = readRegister(MAC_I2C_ADDRESS, 0xFB);
+    mac[2] = readRegister(MAC_I2C_ADDRESS, 0xFC);
+    mac[3] = readRegister(MAC_I2C_ADDRESS, 0xFD);
+    mac[4] = readRegister(MAC_I2C_ADDRESS, 0xFE);
+    mac[5] = readRegister(MAC_I2C_ADDRESS, 0xFF);
   }
   else
   {
@@ -398,6 +398,13 @@ void mqttCallback(char * topic, byte * payload, int length)
     Serial.print(index);
   }
 
+  // Check the index is valid
+  if ((index < 1) || (index > (MCP_MAX_COUNT * 16)))
+  {
+    if (ENABLE_DEBUG) { Serial.println(F(" INVALID INDEX")); }
+    return;
+  }
+
   // Parse the config type
   topicIndex = strtok(NULL, "/");
   char * configType = topicIndex;
@@ -443,12 +450,12 @@ void mqttCallback(char * topic, byte * payload, int length)
     
     if (length == 0 || strncmp((char*)payload, "0", length) == 0)
     {
-      usmInput[mcp].setInvert(input, 0);
+      setMcpInvert(mcp, input, 0);
       if (ENABLE_DEBUG) { Serial.println(0); }
     }
     else if (strncmp((char*)payload, "1", length) == 0)
     {
-      usmInput[mcp].setInvert(input, 1);
+      setMcpInvert(mcp, input, 1);
       if (ENABLE_DEBUG) { Serial.println(1); }
     }
     else
@@ -749,6 +756,7 @@ void scanI2CBus()
         {
           mcp23017[i].pinMode(pin, INPUT);
           mcp23017[i].pullUp(pin, HIGH);
+          setMcpInvert(i, pin, 0);
         }
 
         // Listen for input events
@@ -808,24 +816,37 @@ void scanI2CBus()
   }
 }
 
-/**
-  Required to read the MAC address ROM via I2C
-*/
-byte readRegister(byte r)
+// Set polarity (invert) bit in MCP
+void setMcpInvert(uint8_t mcp, uint8_t pin, uint8_t invert)
 {
-  // Register to read
-  Wire.beginTransmission(MAC_I2C_ADDRESS);
-  Wire.write(r);
-  Wire.endTransmission();
-
-  // Read a byte
-  Wire.requestFrom(MAC_I2C_ADDRESS, 1);
-
-  // Wait
-  while (!Wire.available()) {}
-
-  // Get the value off the bus
-  unsigned char v;
-  v = Wire.read();
-  return v;
+  // Check the MCP at this address was found
+  if (bitRead(g_mcps_found, mcp))
+  {
+    int adr = MCP_I2C_ADDRESS[mcp];
+    uint8_t reg = (pin < 8) ? MCP23017_IPOLA : MCP23017_IPOLB;  
+    
+    uint8_t tmp = readRegister(adr, reg);
+    bitWrite(tmp, pin % 8, invert);
+    writeRegister(adr, reg, tmp);
+  }
 }
+
+// Read 1 byte from I2C device register
+uint8_t readRegister(int adr, uint8_t reg) 
+{
+  Wire.beginTransmission(adr);
+  Wire.write(reg);
+  Wire.endTransmission();
+  Wire.requestFrom(adr, 1);
+  while (!Wire.available()) {}
+  return Wire.read();
+}
+
+// Write 1 byte to I2C device register
+void writeRegister(int adr, uint8_t reg, uint8_t data) 
+{
+  Wire.beginTransmission(adr);
+  Wire.write(reg);
+  Wire.write(data); 
+  Wire.endTransmission();
+} 
