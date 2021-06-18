@@ -16,7 +16,7 @@
 // All times in milliseconds
 #define USM_DEBOUNCE_LOW_TIME     15      // delay to debounce the make part of the signal
 #define USM_DEBOUNCE_HIGH_TIME    30      // delay to debounce the break part of the signal
-#define USM_MULTI_CLICK_TIME      250     // if 0, does not check for multiple button clicks
+#define USM_MULTI_CLICK_TIME      200     // if 0, does not check for multiple button clicks
 #define USM_HOLD_TIME             500     // how often a HOLD event is sent while a button is long-pressed
 
 // Assume we are dealing with a 2 byte IO value - i.e. 16 buttons
