@@ -45,6 +45,9 @@ void USM_Input::setType(uint8_t input, uint8_t type)
   uint32_t mask = ~(0x000FL << bits);
   // '& mask' clears, then '| (..)' sets the desired type at desired location 
   _usmType[index] = (_usmType[index] & mask) | ((uint32_t)type << bits);
+
+  // reset the state for this input ready for processing again
+  _usmState[index].data.state = IS_HIGH;
 }
 
 void USM_Input::onEvent(eventCallback callback)
