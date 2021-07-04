@@ -320,7 +320,7 @@ void mqttMaintain()
       else
       {
         // Reconnection failed, so backoff
-        g_mqtt_backoff = min(g_mqtt_backoff, MQTT_MAX_BACKOFF_COUNT - 1) + 1;
+        if (g_mqtt_backoff < MQTT_MAX_BACKOFF_COUNT) { g_mqtt_backoff++; }
         g_mqtt_last_reconnect_ms = millis();
 
         Serial.print(F("failed, retry in "));
