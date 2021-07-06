@@ -140,7 +140,13 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
       // DEBOUNCE_LOW
       else if (_usmState[i].data.state == DEBOUNCE_LOW) 
       {
-        if (_eventTime[i] > USM_DEBOUNCE_LOW_TIME) 
+        if (_getValue(value, i) == HIGH)
+        {
+          // if input bounces before our debounce timer expires then must be a glitch so reset
+          _usmState[i].data.state = IS_HIGH;
+          _eventTime[i] = 0;
+        }
+        else if (_eventTime[i] > USM_DEBOUNCE_LOW_TIME) 
         {
           _usmState[i].data.state = IS_LOW;
           _eventTime[i] = 0;
@@ -173,7 +179,13 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
       // DEBOUNCE_HIGH
       else if (_usmState[i].data.state == DEBOUNCE_HIGH) 
       {
-        if (_eventTime[i] > USM_DEBOUNCE_HIGH_TIME) 
+        if (_getValue(value, i) == LOW)
+        {
+          // if input bounces before our debounce timer expires then must be a glitch so reset
+          _usmState[i].data.state = IS_LOW;
+          _eventTime[i] = 0;
+        }
+        else if (_eventTime[i] > USM_DEBOUNCE_HIGH_TIME) 
         {
           // for CONTACT, SWITCH or TOGGLE inputs send an event since we have transitioned
           // otherwise check if we have been holding or increment the click count
