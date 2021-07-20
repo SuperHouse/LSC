@@ -26,18 +26,10 @@ GND, 12V, and 4 signal lines.
 An LSC can be built with different numbers of ports and interface
 options.
 
-Input module options include:
+The design files for the I2C to RJ45 breakouts are now in a separate
+repository:
 
- * 8-port version
- * 16-port version
- * 24-port version
- * 24-port version with Ethernet + power passthrough
-
-![8-port I2C RJ45 Breakout PCB](Images/I2CRJ45X8-v3_0-render.jpg)
-
-![16-port I2C RJ45 Breakout PCB](Images/I2CRJ45X16-v3_0-render.jpg)
-
-![24-port I2C RJ45 Breakout PCB](Images/I2CRJ45X24-v3_0-render.jpg)
+  https://github.com/SuperHouse/I2CRJ45
 
 Features:
 
@@ -59,7 +51,8 @@ navigate to the project.
 
 CREDITS
 -------
-Designed by Jonathan Oxer jon@oxer.com.au
+Jonathan Oxer jon@oxer.com.au
+Ben Jones <ben.jones12@gmail.com>
 
 
 DISTRIBUTION
