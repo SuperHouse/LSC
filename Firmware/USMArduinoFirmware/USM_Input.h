@@ -16,7 +16,7 @@
 // All times in milliseconds
 #define USM_DEBOUNCE_LOW_TIME     15      // delay to debounce the make part of the signal
 #define USM_DEBOUNCE_HIGH_TIME    30      // delay to debounce the break part of the signal
-#define USM_MULTI_CLICK_TIME      250     // if 0, does not check for multiple button clicks
+#define USM_MULTI_CLICK_TIME      200     // if 0, does not check for multiple button clicks
 #define USM_HOLD_TIME             500     // how often a HOLD event is sent while a button is long-pressed
 
 // Assume we are dealing with a 2 byte IO value - i.e. 16 buttons
@@ -90,7 +90,7 @@ union usmData_t
   uint8_t _data;
   struct 
   {
-    usmState_t state : 4;
+    uint8_t state : 4;
     uint8_t clicks : 4;
   } data;
 };
@@ -120,10 +120,6 @@ class USM_Input
     uint8_t getType(uint8_t input);
     void setType(uint8_t input, uint8_t type);
 
-    // Get/Set the invert flag
-    uint8_t getInvert(uint8_t input);
-    void setInvert(uint8_t input, uint8_t invert);
-
     // Process this set of button values and send events via onButtonPressed
     void process(uint8_t id, uint16_t value);
 
@@ -133,8 +129,6 @@ class USM_Input
   private:
     // Configuration variables
     uint32_t _usmType[2];
-    uint16_t _usmInvert;
-
     // Input event callback
     eventCallback _onEvent;
 

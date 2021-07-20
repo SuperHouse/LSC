@@ -9,13 +9,13 @@
   The configuration of each individual input can be set by publishing
   an MQTT message to one of these topics;
 
-    [BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
-    [BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
+    [BASETOPIC/]conf/<CLIENTID>/<INDEX>/type
+    [BASETOPIC/]conf/<CLIENTID>/<INDEX>/invt
     
   where;
 
     BASETOPIC   Optional base topic prepended to device topics
-    DEVICEID    ID derived from the MAC address of the device
+    CLIENTID    Client id of device, defaults to USM-<MAC ADDRESS>
     INDEX       Index of the input to configure (1-96)
     
   The message should be;
@@ -32,12 +32,12 @@
   
   The event report is to a topic of the form;
 
-    [BASETOPIC/]stat/<DEVICEID>/<INDEX>
+    [BASETOPIC/]stat/<CLIENTID>/<INDEX>
 
   where;
   
     BASETOPIC   Optional base topic prepended to device topics
-    DEVICEID    ID derived from the MAC address of the device
+    CLIENTID    Client id of device, defaults to USM-<MAC ADDRESS>
     INDEX       Index of the input causing the event (1-96)
 
   The message is a JSON payload of the form; 
@@ -54,6 +54,8 @@
 
   Compile options:
     Arduino Uno or Arduino Mega 2560
+    If using an Uno (or clone) suggest setting MCP_MAX_COUNT = 6 as any
+    more than that starts to cause "Low memory" warnings in the compiler
 
   External dependencies. Install using the Arduino library manager:
       "Adafruit_MCP23017"
@@ -61,7 +63,7 @@
       "SSD1306Ascii"
 
   Bundled dependencies. No need to install separately:
-      "USM_Input" by ben.jones12@gmail.com, forked from mdButton library
+      "USM_Input" by ben.jones12@gmail.com, based on mdButton library
       "USM_Oled" by moinmoin-sh
 
   Based on the Light Switch Controller hardware found here:
@@ -70,14 +72,16 @@
   Bugs/Features:
    - See GitHub issues list.
 
-  Written by Jonathan Oxer for www.superhouse.tv
+  Written by Ben & Moin on behalf of Jon Oxer for www.superhouse.tv
+    https://github.com/sumnerboy12/
+    https://github.com/moinmoin-sh/
     https://github.com/superhouse/
 
   Copyright 2019-2021 SuperHouse Automation Pty Ltd
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.1"
+#define VERSION "4.3"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -93,10 +97,7 @@
 
 /*--------------------------- Constants ----------------------------------*/
 // Each MCP23017 has 16 inputs
-#define MCP_PIN_COUNT     16
-
-// Max number of seconds to backoff when trying to connect to MQTT
-#define MAX_BACKOFF_SECS  5
+#define MCP_PIN_COUNT       16
 
 // List of I2C addresses we might be interested in 
 //  - 0x20-0x27 are the possible 8x MCP23017 chips
@@ -109,17 +110,17 @@ uint8_t g_mcps_found = 0;
 // Was an OLED found on the I2C bus
 byte g_oled_found = 0;
 
-// Unique device id (last 3 HEX pairs of MAC address)
-char g_device_id[7];
-
-// If no mqtt_client_id set in config.h defaults to "USM-<g_device_id>"
+// If no mqtt_client_id set in config.h defaults to "USM-<MAC ADDRESS>"
 char g_mqtt_client_id[16];
 
 // LWT published to <mqtt_lwt_base_topic>/<mqtt_client_id>
 char g_mqtt_lwt_topic[32];
 
-// When reconnecting to MQTT broker backoff in 1s increments
+// When reconnecting to MQTT broker backoff in increasing intervals
 uint8_t g_mqtt_backoff = 0;
+
+// Last time we attempted to reconnect to MQTT
+uint32_t g_mqtt_last_reconnect_ms = 0L;
 
 // Last time the watchdog was reset
 uint32_t g_watchdog_last_reset_ms = 0L;
@@ -189,12 +190,12 @@ void setup()
   if (ENABLE_MAC_ADDRESS_ROM)
   {
     Serial.print(F("Getting MAC address from ROM: "));
-    mac[0] = readRegister(0xFA);
-    mac[1] = readRegister(0xFB);
-    mac[2] = readRegister(0xFC);
-    mac[3] = readRegister(0xFD);
-    mac[4] = readRegister(0xFE);
-    mac[5] = readRegister(0xFF);
+    mac[0] = readRegister(MAC_I2C_ADDRESS, 0xFA);
+    mac[1] = readRegister(MAC_I2C_ADDRESS, 0xFB);
+    mac[2] = readRegister(MAC_I2C_ADDRESS, 0xFC);
+    mac[3] = readRegister(MAC_I2C_ADDRESS, 0xFD);
+    mac[4] = readRegister(MAC_I2C_ADDRESS, 0xFE);
+    mac[5] = readRegister(MAC_I2C_ADDRESS, 0xFF);
   }
   else
   {
@@ -227,15 +228,10 @@ void setup()
     oled.print(mac_address); 
   }
 
-  // Generate device id
-  sprintf_P(g_device_id, PSTR("%02X%02X%02X"), mac[3], mac[4], mac[5]);
-  Serial.print(F("Device id: "));
-  Serial.println(g_device_id);
-
   // Generate MQTT client id, unless one is explicitly defined
-  if (strlen(mqtt_client_id) == 0)
+  if (mqtt_client_id == NULL)
   {
-    sprintf_P(g_mqtt_client_id, PSTR("USM-%s"), g_device_id);  
+    sprintf_P(g_mqtt_client_id, PSTR("USM-%02X%02X%02X"), mac[3], mac[4], mac[5]);  
   }
   else
   {
@@ -261,90 +257,82 @@ void loop()
   // Check our DHCP lease is still ok
   Ethernet.maintain();
 
-  // Process anything on MQTT and reconnect if necessary
-  if (mqtt_client.loop() || mqttConnect())
+  // Check our MQTT broker connection is still ok
+  mqttMaintain();
+
+  // Iterate through each of the MCP23017 input buffers
+  uint32_t port_changed = 0L;
+  for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
   {
-    // Pat the watchdog since we are connected to MQTT
-    patWatchdog();
+    if (bitRead(g_mcps_found, i) == 0)
+      continue;
 
-    // Iterate through each of the MCP23017 input buffers
-    uint32_t port_changed = 0L;
-    for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
+    // Read the values for all 16 inputs on this MCP
+    uint16_t io_value = mcp23017[i].readGPIOAB();
+
+    // Compare with last stored value
+    uint16_t tmp = io_value ^ g_mcp_io_values[i];
+    for (uint8_t j = 0; j < 4; j++)
     {
-      if (bitRead(g_mcps_found, i) == 0)
-        continue;
-
-      uint16_t io_value = mcp23017[i].readGPIOAB();
-
-      // Compare with last stored value
-      uint16_t tmp = io_value ^ g_mcp_io_values[i];
-      for (uint8_t j = 0; j < 4; j++)
+      if ((tmp >> (j * 4)) & 0x000F)
       {
-        if ((tmp >> (j * 4)) & 0x000F)
-        {
-          bitSet(port_changed, (i * 4) + j);
-        }
-      }
-
-      // Need to store for port animation
-      g_mcp_io_values[i] = io_value;
-
-      // Check for any input events
-      usmInput[i].process(i, io_value);
-    }
-    
-    // Update OLED port animation 
-    if (g_oled_found)
-    {
-      // Check if port animation update required
-      if (port_changed)
-      {
-        oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
-        oled.setContrast(OLED_CONTRAST_ON);
-        g_last_oled_trigger = millis(); 
-   
-        USM_Oled_animate(port_changed, g_mcp_io_values);
-      }
-
-      // Clear event display if timed out
-      if (g_last_event_display)
-      {
-        if ((millis() - g_last_event_display) > OLED_SHOW_EVENT_TIME)
-        {
-          oled.setCursor(0, 7);
-          oled.clearToEOL();
-          g_last_event_display = 0L;
-        }
-      }
-
-      // Dim OLED if timed out
-      if (g_last_oled_trigger)
-      {
-        if ((millis() - g_last_oled_trigger) > OLED_TIME_ON)
-        {
-          // Turn OLED OFF if OLED_CONTRAST_DIM is set to 0
-          if (OLED_CONTRAST_DIM == 0)
-          {
-            oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
-          }
-          else
-          { 
-            oled.setContrast(OLED_CONTRAST_DIM);
-          }
-          g_last_oled_trigger = 0L;
-        }
+        bitSet(port_changed, (i * 4) + j);
       }
     }
+
+    // Need to store so we can detect changes for port animation
+    g_mcp_io_values[i] = io_value;
+
+    // Check for any input events
+    usmInput[i].process(i, io_value);
   }
+  
+  // Update OLED port animation 
+  updateOled(port_changed);
+
+  // Pat the watchdog once our processing loop completes
+  patWatchdog();
 }
 
 /**
   MQTT
 */
+void mqttMaintain()
+{
+  if (mqtt_client.loop())
+  {
+    // Currently connected so ensure we are ready to reconnect if it drops
+    g_mqtt_backoff = 0;
+    g_mqtt_last_reconnect_ms = millis();    
+  }
+  else
+  {
+    // Calculate the backoff interval and check if we need to try again
+    uint32_t mqtt_backoff_ms = (uint32_t)g_mqtt_backoff * MQTT_BACKOFF_SECS * 1000;
+    if ((millis() - g_mqtt_last_reconnect_ms) > mqtt_backoff_ms)
+    {
+      Serial.print(F("Connecting to MQTT broker..."));
+
+      if (mqttConnect()) 
+      {
+        Serial.println(F("success"));
+      }
+      else
+      {
+        // Reconnection failed, so backoff
+        if (g_mqtt_backoff < MQTT_MAX_BACKOFF_COUNT) { g_mqtt_backoff++; }
+        g_mqtt_last_reconnect_ms = millis();
+
+        Serial.print(F("failed, retry in "));
+        Serial.print(g_mqtt_backoff * MQTT_BACKOFF_SECS);
+        Serial.println(F("s"));
+      }
+    }
+  }
+}
+
 boolean mqttConnect()
 {
-  Serial.print(F("Connecting to MQTT broker..."));
-
   // Attempt to connect, with a LWT if configured
   boolean success;
   if (ENABLE_MQTT_LWT)
@@ -358,11 +346,8 @@ boolean mqttConnect()
 
   if (success)
   {
-    Serial.println(F("success"));
-    g_mqtt_backoff = 0;
-
     // Subscribe to our config topics
-    char topic[32];
+    char topic[42];
     mqtt_client.subscribe(getConfigTopic(topic));
     
     // Publish LWT so anything listening knows we are alive
@@ -372,17 +357,6 @@ boolean mqttConnect()
       mqtt_client.publish(g_mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
     }
   }
-  else
-  {
-    // Backoff reconnects in 1s increments, until a max of 10s
-    if (g_mqtt_backoff < MAX_BACKOFF_SECS) g_mqtt_backoff++;
-
-    Serial.print(F("failed, retry in "));
-    Serial.print(g_mqtt_backoff);
-    Serial.println(F("s"));
-
-    delay(g_mqtt_backoff * 1000);
-  }
 
   return success;
 }
@@ -390,8 +364,8 @@ boolean mqttConnect()
 void mqttCallback(char * topic, byte * payload, int length) 
 {
   // We support config updates published to the following topics;
-  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/type
-  //    [<BASETOPIC/]conf/<DEVICEID>/<INDEX>/invt
+  //    [<BASETOPIC/]conf/<CLIENTID>/<INDEX>/type
+  //    [<BASETOPIC/]conf/<CLIENTID>/<INDEX>/invt
   // where the message should be;
   //    /type     One of BUTTON, CONTACT, ROTARY, SWITCH or TOGGLE
   //    /invt     Either 0 or 1
@@ -407,7 +381,7 @@ void mqttCallback(char * topic, byte * payload, int length)
   topicIndex = strtok(NULL, "/");
   topicIndex = strtok(NULL, "/");
 
-  if (strlen(mqtt_base_topic) > 0)
+  if (mqtt_base_topic != NULL)
   {
     topicIndex = strtok(NULL, "/");
   }
@@ -422,6 +396,13 @@ void mqttCallback(char * topic, byte * payload, int length)
     Serial.print(F("[CONF]"));
     Serial.print(F(" INDX:"));
     Serial.print(index);
+  }
+
+  // Check the index is valid
+  if ((index < 1) || (index > (MCP_MAX_COUNT * 16)))
+  {
+    if (ENABLE_DEBUG) { Serial.println(F(" INVALID INDEX")); }
+    return;
   }
 
   // Parse the config type
@@ -469,12 +450,12 @@ void mqttCallback(char * topic, byte * payload, int length)
     
     if (length == 0 || strncmp((char*)payload, "0", length) == 0)
     {
-      usmInput[mcp].setInvert(input, 0);
+      setMcpInvert(mcp, input, 0);
       if (ENABLE_DEBUG) { Serial.println(0); }
     }
     else if (strncmp((char*)payload, "1", length) == 0)
     {
-      usmInput[mcp].setInvert(input, 1);
+      setMcpInvert(mcp, input, 1);
       if (ENABLE_DEBUG) { Serial.println(1); }
     }
     else
@@ -489,10 +470,10 @@ void mqttCallback(char * topic, byte * payload, int length)
   }
 }
 
-char * getInputType(uint8_t type)
+void getInputType(char inputType[], uint8_t type)
 {
   // Determine what type of input we have
-  static char inputType[8];
+  sprintf_P(inputType, PSTR("ERROR"));
   switch (type)
   {
     case BUTTON:
@@ -510,17 +491,13 @@ char * getInputType(uint8_t type)
     case TOGGLE:
       sprintf_P(inputType, PSTR("TOGGLE"));
       break;
-    default:
-      sprintf_P(inputType, PSTR("ERROR"));
-      break;
   }
-  return inputType;
 }
 
-char * getEventType(uint8_t type, uint8_t state)
+void getEventType(char eventType[], uint8_t type, uint8_t state)
 {
   // Determine what event we need to publish
-  static char eventType[7];
+  sprintf_P(eventType, PSTR("ERROR"));
   switch (type)
   {
     case BUTTON:
@@ -544,9 +521,6 @@ char * getEventType(uint8_t type, uint8_t state)
         case 5:
           sprintf_P(eventType, PSTR("PENTA"));
           break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
       }
       break;
     case CONTACT:
@@ -557,9 +531,6 @@ char * getEventType(uint8_t type, uint8_t state)
           break;
         case USM_HIGH:
           sprintf_P(eventType, PSTR("OPEN"));
-          break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
           break;
       }
       break;
@@ -572,9 +543,6 @@ char * getEventType(uint8_t type, uint8_t state)
         case USM_HIGH:
           sprintf_P(eventType, PSTR("DOWN"));
           break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
       }
       break;
     case SWITCH:
@@ -586,45 +554,88 @@ char * getEventType(uint8_t type, uint8_t state)
         case USM_HIGH:
           sprintf_P(eventType, PSTR("OFF"));
           break;
-        default:
-          sprintf_P(eventType, PSTR("ERROR"));
-          break;
       }
       break;
     case TOGGLE:
       sprintf_P(eventType, PSTR("TOGGLE"));
       break;
-    default:
-      sprintf_P(eventType, PSTR("ERROR"));
-      break;
   }
-  return eventType;
 }
 
 char * getConfigTopic(char topic[])
 {
-  if (strlen(mqtt_base_topic) == 0)
+  if (mqtt_base_topic == NULL)
   {
-    sprintf_P(topic, PSTR("conf/%s/+/+"), g_device_id);
+    sprintf_P(topic, PSTR("conf/%s/+/+"), g_mqtt_client_id);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), mqtt_base_topic, g_device_id);
+    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), mqtt_base_topic, g_mqtt_client_id);
   }
   return topic;
 }
 
 char * getEventTopic(char topic[], uint8_t index)
 {
-  if (strlen(mqtt_base_topic) == 0)
+  if (mqtt_base_topic == NULL)
   {
-    sprintf_P(topic, PSTR("stat/%s/%d"), g_device_id, index);
+    sprintf_P(topic, PSTR("stat/%s/%d"), g_mqtt_client_id, index);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_device_id, index);
+    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_mqtt_client_id, index);
   }
   return topic;
+}
+
+/**
+  OLED
+*/
+void updateOled(uint32_t port_changed)
+{
+  if (g_oled_found)
+  {
+    // Check if port animation update required
+    if (port_changed)
+    {
+      oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
+      oled.setContrast(OLED_CONTRAST_ON);
+      g_last_oled_trigger = millis(); 
+ 
+      USM_Oled_animate(port_changed, g_mcp_io_values);
+    }
+
+    // Clear event display if timed out
+    if (g_last_event_display)
+    {
+      if ((millis() - g_last_event_display) > OLED_EVENT_MS)
+      {
+        oled.setCursor(0, 7);
+        oled.clearToEOL();
+        
+        g_last_event_display = 0L;
+      }
+    }
+
+    // Dim OLED if timed out
+    if (g_last_oled_trigger)
+    {
+      if ((millis() - g_last_oled_trigger) > OLED_ON_MS)
+      {
+        // Turn OLED OFF if OLED_CONTRAST_DIM is set to 0
+        if (OLED_CONTRAST_DIM == 0)
+        {
+          oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
+        }
+        else
+        { 
+          oled.setContrast(OLED_CONTRAST_DIM);
+        }
+        
+        g_last_oled_trigger = 0L;
+      }
+    }
+  } 
 }
 
 /**
@@ -639,8 +650,10 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
   uint8_t channel = (input % 4) + 1;
   uint8_t index = raw_index + 1;
   
-  char * inputType = getInputType(type);
-  char * eventType = getEventType(type, state);
+  char inputType[8];
+  getInputType(inputType, type);
+  char eventType[7];
+  getEventType(eventType, type, state);
 
   if (ENABLE_DEBUG)
   {
@@ -666,12 +679,19 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
     g_last_event_display = millis(); 
   }
 
-  // Build JSON payload for this event
-  sprintf_P(message, PSTR("{\"PORT\":%d,\"CHAN\":%d,\"INDX\":%d,\"TYPE\":\"%s\",\"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
-
-  // Publish event to MQTT
-  char topic[32];
-  mqtt_client.publish(getEventTopic(topic, index), message);
+  if (mqtt_client.connected())
+  {
+    // Build JSON payload for this event
+    sprintf_P(message, PSTR("{\"PORT\":%d,\"CHAN\":%d,\"INDX\":%d,\"TYPE\":\"%s\",\"EVNT\":\"%s\"}"), port, channel, index, inputType, eventType);
+  
+    // Publish event to MQTT
+    char topic[42];
+    mqtt_client.publish(getEventTopic(topic, index), message);
+  }
+  else
+  {
+    Serial.println("FAILOVER!!!");    
+  }
 }
 
 /**
@@ -736,6 +756,7 @@ void scanI2CBus()
         {
           mcp23017[i].pinMode(pin, INPUT);
           mcp23017[i].pullUp(pin, HIGH);
+          setMcpInvert(i, pin, 0);
         }
 
         // Listen for input events
@@ -768,16 +789,16 @@ void scanI2CBus()
     // If OLED was found then initialise
     #ifdef OLED_TYPE_SSD1306
       Serial.print(F("SSD1306 "));
-      #if OLED_RESET >= 0
-        oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS, OLED_RESET);
+      #if OLED_RESET_PIN >= 0
+        oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS, OLED_RESET_PIN);
       #else
         oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
       #endif
     #endif
     #ifdef OLED_TYPE_SH1106
       Serial.print(F("SH1106 "));
-      #if OLED_RESET >= 0
-        oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS, OLED_RESET);
+      #if OLED_RESET_PIN >= 0
+        oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS, OLED_RESET_PIN);
       #else
         oled.begin(&SH1106_128x64, OLED_I2C_ADDRESS);
       #endif
@@ -795,24 +816,37 @@ void scanI2CBus()
   }
 }
 
-/**
-  Required to read the MAC address ROM via I2C
-*/
-byte readRegister(byte r)
+// Set polarity (invert) bit in MCP
+void setMcpInvert(uint8_t mcp, uint8_t pin, uint8_t invert)
 {
-  // Register to read
-  Wire.beginTransmission(MAC_I2C_ADDRESS);
-  Wire.write(r);
-  Wire.endTransmission();
-
-  // Read a byte
-  Wire.requestFrom(MAC_I2C_ADDRESS, 1);
-
-  // Wait
-  while (!Wire.available()) {}
-
-  // Get the value off the bus
-  unsigned char v;
-  v = Wire.read();
-  return v;
+  // Check the MCP at this address was found
+  if (bitRead(g_mcps_found, mcp))
+  {
+    int adr = MCP_I2C_ADDRESS[mcp];
+    uint8_t reg = (pin < 8) ? MCP23017_IPOLA : MCP23017_IPOLB;  
+    
+    uint8_t tmp = readRegister(adr, reg);
+    bitWrite(tmp, pin % 8, invert);
+    writeRegister(adr, reg, tmp);
+  }
 }
+
+// Read 1 byte from I2C device register
+uint8_t readRegister(int adr, uint8_t reg) 
+{
+  Wire.beginTransmission(adr);
+  Wire.write(reg);
+  Wire.endTransmission();
+  Wire.requestFrom(adr, 1);
+  while (!Wire.available()) {}
+  return Wire.read();
+}
+
+// Write 1 byte to I2C device register
+void writeRegister(int adr, uint8_t reg, uint8_t data) 
+{
+  Wire.beginTransmission(adr);
+  Wire.write(reg);
+  Wire.write(data); 
+  Wire.endTransmission();
+} 

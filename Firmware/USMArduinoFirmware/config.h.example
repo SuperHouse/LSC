@@ -18,11 +18,13 @@ const byte    static_ip[]           = { 192, 168, 1, 35 };                    //
 const byte    static_dns[]          = { 192, 168, 1, 1 };                     // Use if DHCP disabled
 
 /* MQTT */
-const char *  mqtt_broker           = "192.168.1.185";      // IP address or host name of your MQTT broker
+#define       MQTT_BACKOFF_SECS       5                     // How long to increase the backoff timer each time we fail to connect
+#define       MQTT_MAX_BACKOFF_COUNT  12                    // Max number of backoffs (i.e. longest backoff is MQTT_BACKOFF_SECS * MQTT_MAX_BACKOFF_COUNT)
+const char *  mqtt_broker           = "test.mosquitto.org"; // IP address or host name of your MQTT broker
 const int     mqtt_port             = 1883;
-const char *  mqtt_client_id        = "";                   // Max 15 chars, optional
-const char *  mqtt_username         = "YOUR USERNAME";
-const char *  mqtt_password         = "YOUR PASSWORD";
+const char *  mqtt_client_id        = NULL;                 // Max 15 chars, optional
+const char *  mqtt_username         = NULL;                 // Optional, NULL if no authentication
+const char *  mqtt_password         = NULL;                 // Optional, NULL if no authentication
 const char *  mqtt_base_topic       = "usm";                // Max 15 chars with NO trailing '/', optional
 
 #define       ENABLE_MQTT_LWT         false
@@ -32,7 +34,7 @@ const uint8_t mqtt_lwt_retain       = 1;
 
 /* ----------------- Hardware-specific config ---------------------- */
 /* MCP23017 */
-#define       MCP_MAX_COUNT           8                     // Max number of supported MCP23017 chips 
+#define       MCP_MAX_COUNT           6                     // Max number of supported MCP23017 chips 
 
 /* Watchdog */
 #define       ENABLE_WATCHDOG         false
@@ -41,13 +43,13 @@ const uint8_t mqtt_lwt_retain       = 1;
 #define       WATCHDOG_RESET_MS       30000
 
 /* OLED - ONE and ONLY ONE OLED_TYPE should be defined (comment out an others) */
-//#define       OLED_TYPE_SSD1306                           // mostly the .96"
-#define       OLED_TYPE_SH1106                              // mostly the 1.3"
-#define       OLED_I2C_ADDRESS      0x3c                    // I2c address of OLED used
-#define       OLED_RESET            -1                      // Reset pin (or -1 if sharing Arduino reset pin)
-#define       OLED_CONTRAST_DIM     5                       // OLED contrast when dimmed (0 == OFF)
-#define       OLED_CONTRAST_ON      128                     // OLED contrast when normal (on)
-#define       OLED_TIME_ON          10000                   // OLED time in msec with brightness ON after trigger
-#define       OLED_SHOW_EVENT_TIME  3000                    // the time in ms the event line is shown if no new event occured
+//#define       OLED_TYPE_SSD1306                           // Mostly the .96"
+#define       OLED_TYPE_SH1106                              // Mostly the 1.3"
+#define       OLED_I2C_ADDRESS        0x3c                  // I2c address of OLED used
+#define       OLED_RESET_PIN          -1                    // Reset pin (or -1 if sharing Arduino reset pin)
+#define       OLED_CONTRAST_ON        128                   // OLED contrast when ON, i.e. after an event
+#define       OLED_CONTRAST_DIM       0                     // OLED contrast when DIMMED (0 == OFF), i.e. after OLED_ON_MS expires
+#define       OLED_ON_MS              10000                 // How long to turn on the OLED after an event
+#define       OLED_EVENT_MS           3000                  // How long to display an event in the bottom line
 
 #endif

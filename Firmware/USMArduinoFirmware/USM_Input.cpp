@@ -16,9 +16,8 @@ USM_Input::USM_Input()
   _lastUpdateTime = 0;
   for (uint8_t i = 0; i < USM_INPUT_COUNT; i++)
   {
-    // Default all inputs to buttons (non-inverted)
+    // Default all inputs to buttons
     setType(i, BUTTON);
-    setInvert(i, 0);
 
     // Assume all inputs are in-active - i.e. HIGH
     _usmState[i].data.state = IS_HIGH;
@@ -46,20 +45,9 @@ void USM_Input::setType(uint8_t input, uint8_t type)
   uint32_t mask = ~(0x000FL << bits);
   // '& mask' clears, then '| (..)' sets the desired type at desired location 
   _usmType[index] = (_usmType[index] & mask) | ((uint32_t)type << bits);
-}
 
-uint8_t USM_Input::getInvert(uint8_t input)
-{
-  // shifts the desired 1 bit to the right most position then masks the LSB
-  return (_usmInvert >> input) & 0x01L;
-}
-
-void USM_Input::setInvert(uint8_t input, uint8_t invert)
-{
-  // sets a mask with the 1 bit we want to change to 0  
-  uint16_t mask = ~(0x01L << input);
-  // '& mask' clears, then '| (..)' sets the desired type at desired location 
-  _usmInvert = (_usmInvert & mask) | ((uint16_t)invert << input);
+  // reset the state for this input ready for processing again
+  _usmState[index].data.state = IS_HIGH;
 }
 
 void USM_Input::onEvent(eventCallback callback)
@@ -89,9 +77,7 @@ void USM_Input::process(uint8_t id, uint16_t value)
 
 uint8_t USM_Input::_getValue(uint16_t value, uint8_t input)
 {
-  uint8_t bit = bitRead(value, input);
-  if (getInvert(input)) { bit = !bit; }
-  return bit;
+  return bitRead(value, input);
 }
 
 void USM_Input::_update(uint8_t event[], uint16_t value) 
@@ -154,7 +140,13 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
       // DEBOUNCE_LOW
       else if (_usmState[i].data.state == DEBOUNCE_LOW) 
       {
-        if (_eventTime[i] > USM_DEBOUNCE_LOW_TIME) 
+        if (_getValue(value, i) == HIGH)
+        {
+          // if input bounces before our debounce timer expires then must be a glitch so reset
+          _usmState[i].data.state = IS_HIGH;
+          _eventTime[i] = 0;
+        }
+        else if (_eventTime[i] > USM_DEBOUNCE_LOW_TIME) 
         {
           _usmState[i].data.state = IS_LOW;
           _eventTime[i] = 0;
@@ -187,7 +179,13 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
       // DEBOUNCE_HIGH
       else if (_usmState[i].data.state == DEBOUNCE_HIGH) 
       {
-        if (_eventTime[i] > USM_DEBOUNCE_HIGH_TIME) 
+        if (_getValue(value, i) == LOW)
+        {
+          // if input bounces before our debounce timer expires then must be a glitch so reset
+          _usmState[i].data.state = IS_LOW;
+          _eventTime[i] = 0;
+        }
+        else if (_eventTime[i] > USM_DEBOUNCE_HIGH_TIME) 
         {
           // for CONTACT, SWITCH or TOGGLE inputs send an event since we have transitioned
           // otherwise check if we have been holding or increment the click count
@@ -228,6 +226,4 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
       }
     }
   }
-
-  return event;
 }    
