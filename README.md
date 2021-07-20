@@ -51,8 +51,8 @@ navigate to the project.
 
 CREDITS
 -------
-Jonathan Oxer jon@oxer.com.au
-Ben Jones <ben.jones12@gmail.com>
+ * Jonathan Oxer jon@oxer.com.au
+ * Ben Jones <ben.jones12@gmail.com>
 
 
 DISTRIBUTION
