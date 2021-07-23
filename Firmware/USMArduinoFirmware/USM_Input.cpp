@@ -29,25 +29,25 @@ USM_Input::USM_Input()
 
 uint8_t USM_Input::getType(uint8_t input)
 {
-  uint8_t index = input / 8;
-  uint8_t bits = (input % 8) * 4;
+  uint8_t index = input / 2;
+  uint8_t bits = (input % 2) * 4;
   
   // shifts the desired 4 bits to the right most position then masks the 4 LSB
-  return (_usmType[index] >> bits) & 0x000FL;
+  return (_usmType[index] >> bits) & 0x0F;
 }
 
 void USM_Input::setType(uint8_t input, uint8_t type)
 {
-  uint8_t index = input / 8;
-  uint8_t bits = (input % 8) * 4;
+  uint8_t index = input / 2;
+  uint8_t bits = (input % 2) * 4;
   
   // sets a mask with the 4 bits we want to change to 0  
-  uint32_t mask = ~(0x000FL << bits);
+  uint8_t mask = ~(0x0F << bits);
   // '& mask' clears, then '| (..)' sets the desired type at desired location 
-  _usmType[index] = (_usmType[index] & mask) | ((uint32_t)type << bits);
+  _usmType[index] = (_usmType[index] & mask) | (type << bits);
 
   // reset the state for this input ready for processing again
-  _usmState[index].data.state = IS_HIGH;
+  _usmState[input].data.state = IS_HIGH;
 }
 
 void USM_Input::onEvent(eventCallback callback)

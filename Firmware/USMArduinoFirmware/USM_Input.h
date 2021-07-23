@@ -128,7 +128,7 @@ class USM_Input
 
   private:
     // Configuration variables
-    uint32_t _usmType[2];
+    uint8_t _usmType[8];
     // Input event callback
     eventCallback _onEvent;
 

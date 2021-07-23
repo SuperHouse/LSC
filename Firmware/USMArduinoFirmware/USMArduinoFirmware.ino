@@ -81,7 +81,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.3"
+#define VERSION "4.4"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -159,9 +159,6 @@ SSD1306AsciiWire oled;
 */
 void setup()
 {
-  // Start the I2C bus
-  Wire.begin();
-
   // Startup logging to serial
   Serial.begin(SERIAL_BAUD_RATE);
   Serial.println();
@@ -175,8 +172,15 @@ void setup()
   // Set up watchdog
   initialiseWatchdog();
 
+  // Start the I2C bus
+  Wire.begin();
+
   // Scan the I2C bus for any MCP23017s and initialise them
   scanI2CBus();
+
+  // set I2C clock to 400 kHz for faster scan rate  
+  // needs to be called after scanI2CBus() to take effect
+  Wire.setClock(I2C_CLOCK_SPEED);
 
   // Display the firmware version and initialise the port display
   if (g_oled_found)
@@ -671,7 +675,6 @@ void usmEvent(uint8_t id, uint8_t input, uint8_t type, uint8_t state)
   {
     // Show last input event on buttom line
     oled.setCursor(0, 7);
-    oled.clearToEOL();
     oled.setInvertMode(true);
     sprintf_P(message, PSTR("IDX:%2d %s %s   "), index, inputType, eventType);
     oled.print(message); 
