@@ -81,7 +81,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.4"
+#define VERSION "4.5"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -454,12 +454,12 @@ void mqttCallback(char * topic, byte * payload, int length)
     
     if (length == 0 || strncmp((char*)payload, "0", length) == 0)
     {
-      setMcpInvert(mcp, input, 0);
+      usmInput[mcp].setInvert(input, 0);
       if (ENABLE_DEBUG) { Serial.println(0); }
     }
     else if (strncmp((char*)payload, "1", length) == 0)
     {
-      setMcpInvert(mcp, input, 1);
+      usmInput[mcp].setInvert(input, 1);
       if (ENABLE_DEBUG) { Serial.println(1); }
     }
     else
@@ -759,7 +759,6 @@ void scanI2CBus()
         {
           mcp23017[i].pinMode(pin, INPUT);
           mcp23017[i].pullUp(pin, HIGH);
-          setMcpInvert(i, pin, 0);
         }
 
         // Listen for input events
@@ -816,21 +815,6 @@ void scanI2CBus()
   else
   {
     Serial.println(F("empty"));
-  }
-}
-
-// Set polarity (invert) bit in MCP
-void setMcpInvert(uint8_t mcp, uint8_t pin, uint8_t invert)
-{
-  // Check the MCP at this address was found
-  if (bitRead(g_mcps_found, mcp))
-  {
-    int adr = MCP_I2C_ADDRESS[mcp];
-    uint8_t reg = (pin < 8) ? MCP23017_IPOLA : MCP23017_IPOLB;  
-    
-    uint8_t tmp = readRegister(adr, reg);
-    bitWrite(tmp, pin % 8, invert);
-    writeRegister(adr, reg, tmp);
   }
 }
 
