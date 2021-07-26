@@ -16,8 +16,8 @@ USM_Input::USM_Input()
   _lastUpdateTime = 0;
   for (uint8_t i = 0; i < USM_INPUT_COUNT; i++)
   {
-    // Default all inputs to buttons (non-inverted)
-    setType(i, BUTTON);
+    // Default all inputs to non-inverted switches
+    setType(i, SWITCH);
     setInvert(i, 0);
 
     // Assume all inputs are in-active - i.e. HIGH

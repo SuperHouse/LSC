@@ -25,7 +25,7 @@
     
   A null or empty message will reset the input to;
 
-    /type       BUTTON
+    /type       SWITCH
     /invt       0 (non-inverted)
     
   A retained message will ensure the USM auto-configures on startup.
@@ -42,14 +42,14 @@
 
   The message is a JSON payload of the form; 
 
-    {"PORT":24, "CHANNEL":2, "INDEX":94, "TYPE":"BUTTON", "EVENT":"SINGLE"}
+    {"PORT":24, "CHANNEL":2, "INDEX":94, "TYPE":"SWITCH", "EVENT":"ON"}
 
   where EVENT can be one of (depending on type);
 
     BUTTON      SINGLE, DOUBLE, TRIPLE, QUAD, PENTA, or HOLD
     CONTACT     OPEN or CLOSED
     ROTARY      UP or DOWN
-    SWTICH      ON or OFF
+    SWITCH      ON or OFF
     TOGGLE      TOGGLE
 
   Compile options:
@@ -374,7 +374,7 @@ void mqttCallback(char * topic, byte * payload, int length)
   //    /type     One of BUTTON, CONTACT, ROTARY, SWITCH or TOGGLE
   //    /invt     Either 0 or 1
   // and a null or empty message will default to;
-  //    /type     BUTTON
+  //    /type     SWITCH
   //    /invt     0
 
   // Tokenise the topic
@@ -418,7 +418,12 @@ void mqttCallback(char * topic, byte * payload, int length)
   {
     if (ENABLE_DEBUG) { Serial.print(F(" TYPE:")); }
 
-    if (length == 0 || strncmp((char*)payload, "BUTTON", length) == 0)
+    if (length == 0 || strncmp((char*)payload, "SWITCH", length) == 0)
+    {
+      usmInput[mcp].setType(input, SWITCH);
+      if (ENABLE_DEBUG) { Serial.println(F("SWITCH")); }
+    }
+    else if (strncmp((char*)payload, "BUTTON", length) == 0)
     {
       usmInput[mcp].setType(input, BUTTON);
       if (ENABLE_DEBUG) { Serial.println(F("BUTTON")); }
@@ -432,11 +437,6 @@ void mqttCallback(char * topic, byte * payload, int length)
     {
       usmInput[mcp].setType(input, ROTARY);
       if (ENABLE_DEBUG) { Serial.println(F("ROTARY")); }
-    }
-    else if (strncmp((char*)payload, "SWITCH", length) == 0)
-    {
-      usmInput[mcp].setType(input, SWITCH);
-      if (ENABLE_DEBUG) { Serial.println(F("SWITCH")); }
     }
     else if (strncmp((char*)payload, "TOGGLE", length) == 0)
     {
