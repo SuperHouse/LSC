@@ -33,6 +33,9 @@ const uint8_t mqtt_lwt_qos          = 0;
 const uint8_t mqtt_lwt_retain       = 1;
 
 /* ----------------- Hardware-specific config ---------------------- */
+/* I2C */
+#define       I2C_CLOCK_SPEED         400000L  
+             
 /* MCP23017 */
 #define       MCP_MAX_COUNT           6                     // Max number of supported MCP23017 chips 
 

@@ -120,6 +120,10 @@ class USM_Input
     uint8_t getType(uint8_t input);
     void setType(uint8_t input, uint8_t type);
 
+    // Get/Set the invert flag
+    uint8_t getInvert(uint8_t input);
+    void setInvert(uint8_t input, uint8_t invert);
+
     // Process this set of button values and send events via onButtonPressed
     void process(uint8_t id, uint16_t value);
 
@@ -128,7 +132,9 @@ class USM_Input
 
   private:
     // Configuration variables
-    uint32_t _usmType[2];
+    uint8_t _usmType[8];
+    uint16_t _usmInvert;
+    
     // Input event callback
     eventCallback _onEvent;
 
