@@ -1,7 +1,7 @@
 /*
  * USM_Input.cpp
  * 
- * An Arduino library capable of detecting input events and reporing
+ * An Arduino library capable of detecting input events and reporting
  * consecutive button presses made in quick succession or if the 
  * button was held down for a long time. 
  *
@@ -99,25 +99,27 @@ uint8_t USM_Input::_getValue(uint16_t value, uint8_t input)
 
 uint16_t USM_Input::_getDebounceLowTime(uint8_t type)
 {
-  if (type == BUTTON)
+  switch (type)
   {
-    return USM_BTN_DEBOUNCE_LOW_MS;
-  }
-  else
-  {
-    return USM_OTH_DEBOUNCE_LOW_MS;
+    case BUTTON:
+      return USM_BTN_DEBOUNCE_LOW_MS;
+    case ROTARY:
+      return USM_ROT_DEBOUNCE_LOW_MS;
+    default:
+      return USM_OTH_DEBOUNCE_LOW_MS;
   }
 }
 
 uint16_t USM_Input::_getDebounceHighTime(uint8_t type)
 {
-  if (type == BUTTON)
+  switch (type)
   {
-    return USM_BTN_DEBOUNCE_HIGH_MS;
-  }
-  else
-  {
-    return USM_OTH_DEBOUNCE_HIGH_MS;
+    case BUTTON:
+      return USM_BTN_DEBOUNCE_HIGH_MS;
+    case ROTARY:
+      return USM_ROT_DEBOUNCE_HIGH_MS;
+    default:
+      return USM_OTH_DEBOUNCE_HIGH_MS;
   }
 }
 

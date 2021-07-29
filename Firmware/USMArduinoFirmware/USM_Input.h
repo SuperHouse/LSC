@@ -1,7 +1,7 @@
 /*
  * USM_Input.h
  * 
- * An Arduino library capable of detecting input events and reporing
+ * An Arduino library capable of detecting input events and reporting
  * consecutive button presses made in quick succession or if the 
  * button was held down for a long time. 
  * 
@@ -12,22 +12,30 @@
 
 #include "Arduino.h"
 
-// Assume we are dealing with a 2 byte IO value - i.e. 16 binary inputs
-// typically from an MCP23017 I2C I/O buffer chip
-#define USM_INPUT_COUNT           16
-
 // DEBOUNCE times (adjust these if you have very noisy buttons or switches)
-//  * BUTTON types need short debounce times so we don't miss fast multi-click events
-#define USM_BTN_DEBOUNCE_LOW_MS   15      // delay to debounce the make part of the signal
-#define USM_BTN_DEBOUNCE_HIGH_MS  30      // delay to debounce the break part of the signal
-//  * OTHER types can have longer debounce times as we only need to detect simple transitions
-#define USM_OTH_DEBOUNCE_LOW_MS   50      // delay to debounce the make part of the signal
-#define USM_OTH_DEBOUNCE_HIGH_MS  100     // delay to debounce the break part of the signal
+//  USM_XXX_DEBOUNCE_LOW_MS       debounce delay for the MAKE part of the signal
+//  USM_XXX_DEBOUNCE_HIGH_MS      debounce delay for the BREAK part of the signal
+
+// BUTTON types need short debounce times so we don't miss fast multi-click events
+#define USM_BTN_DEBOUNCE_LOW_MS   15
+#define USM_BTN_DEBOUNCE_HIGH_MS  30
+
+// ROTARY types need short debounce times so we don't miss rapid rotations
+#define USM_ROT_DEBOUNCE_LOW_MS   15
+#define USM_ROT_DEBOUNCE_HIGH_MS  30
+
+// OTHER types can have longer debounce times as we only need to detect simple transitions
+#define USM_OTH_DEBOUNCE_LOW_MS   50
+#define USM_OTH_DEBOUNCE_HIGH_MS  100
 
 // BUTTON types need a few extra times for multi-click and hold event detection
 #define USM_BTN_MULTI_CLICK_MS    200     // how long to wait for another click before sending a multi-click event
 #define USM_BTN_HOLD_MS           500     // how long before a click is considered a HOLD event (and repeated)
 #define USM_BTN_MAX_CLICKS        5       // max count reported in a multi-click event
+
+// Assume we are dealing with a 2 byte IO value - i.e. 16 binary inputs
+// typically from an MCP23017 I2C I/O buffer chip
+#define USM_INPUT_COUNT           16
 
 // Event constants
 #define USM_NO_EVENT              0
