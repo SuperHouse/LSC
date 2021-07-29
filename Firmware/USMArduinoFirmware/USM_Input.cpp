@@ -97,6 +97,30 @@ uint8_t USM_Input::_getValue(uint16_t value, uint8_t input)
   return bit;
 }
 
+uint16_t USM_Input::_getDebounceLowTime(uint8_t type)
+{
+  if (type == BUTTON)
+  {
+    return USM_BTN_DEBOUNCE_LOW_MS;
+  }
+  else
+  {
+    return USM_OTH_DEBOUNCE_LOW_MS;
+  }
+}
+
+uint16_t USM_Input::_getDebounceHighTime(uint8_t type)
+{
+  if (type == BUTTON)
+  {
+    return USM_BTN_DEBOUNCE_HIGH_MS;
+  }
+  else
+  {
+    return USM_OTH_DEBOUNCE_HIGH_MS;
+  }
+}
+
 void USM_Input::_update(uint8_t event[], uint16_t value) 
 {
   // Work out how long since our last update so we can increment the event times for each button
@@ -163,7 +187,7 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
           _usmState[i].data.state = IS_HIGH;
           _eventTime[i] = 0;
         }
-        else if (_eventTime[i] > USM_DEBOUNCE_LOW_TIME) 
+        else if (_eventTime[i] > _getDebounceLowTime(type)) 
         {
           _usmState[i].data.state = IS_LOW;
           _eventTime[i] = 0;
@@ -185,7 +209,7 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
         }
         else
         {
-          if (type == BUTTON && _eventTime[i] > USM_HOLD_TIME) 
+          if (type == BUTTON && _eventTime[i] > USM_BTN_HOLD_MS) 
           {
             _usmState[i].data.clicks = USM_HOLD_EVENT;
             _eventTime[i] = 0;
@@ -202,7 +226,7 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
           _usmState[i].data.state = IS_LOW;
           _eventTime[i] = 0;
         }
-        else if (_eventTime[i] > USM_DEBOUNCE_HIGH_TIME) 
+        else if (_eventTime[i] > _getDebounceHighTime(type)) 
         {
           // for CONTACT, SWITCH or TOGGLE inputs send an event since we have transitioned
           // otherwise check if we have been holding or increment the click count
@@ -220,14 +244,14 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
             } 
             else 
             {
-              _usmState[i].data.clicks = min(USM_MAX_CLICKS, _usmState[i].data.clicks + 1);
+              _usmState[i].data.clicks = min(USM_BTN_MAX_CLICKS, _usmState[i].data.clicks + 1);
               _usmState[i].data.state = AWAIT_MULTI;
               _eventTime[i] = 0; 
             }
           }
         }  
       } 
-      // AWAIT_MULTI
+      // AWAIT_MULTI (can only be here for BUTTON inputs)
       else if (_usmState[i].data.state == AWAIT_MULTI) 
       { 
         if (_getValue(value, i) == LOW) 
@@ -235,7 +259,7 @@ void USM_Input::_update(uint8_t event[], uint16_t value)
           _usmState[i].data.state = DEBOUNCE_LOW;
           _eventTime[i] = 0;
         } 
-        else if (_eventTime[i] > USM_MULTI_CLICK_TIME) 
+        else if (_eventTime[i] > USM_BTN_MULTI_CLICK_MS) 
         {
           _usmState[i].data.state = IS_HIGH;
           event[i] = _usmState[i].data.clicks;

@@ -12,24 +12,28 @@
 
 #include "Arduino.h"
 
-// Hardcoded to save memory - should be configurable really
-// All times in milliseconds
-#define USM_DEBOUNCE_LOW_TIME     15      // delay to debounce the make part of the signal
-#define USM_DEBOUNCE_HIGH_TIME    30      // delay to debounce the break part of the signal
-#define USM_MULTI_CLICK_TIME      200     // if 0, does not check for multiple button clicks
-#define USM_HOLD_TIME             500     // how often a HOLD event is sent while a button is long-pressed
-
-// Assume we are dealing with a 2 byte IO value - i.e. 16 buttons
+// Assume we are dealing with a 2 byte IO value - i.e. 16 binary inputs
+// typically from an MCP23017 I2C I/O buffer chip
 #define USM_INPUT_COUNT           16
+
+// DEBOUNCE times (adjust these if you have very noisy buttons or switches)
+//  * BUTTON types need short debounce times so we don't miss fast multi-click events
+#define USM_BTN_DEBOUNCE_LOW_MS   15      // delay to debounce the make part of the signal
+#define USM_BTN_DEBOUNCE_HIGH_MS  30      // delay to debounce the break part of the signal
+//  * OTHER types can have longer debounce times as we only need to detect simple transitions
+#define USM_OTH_DEBOUNCE_LOW_MS   50      // delay to debounce the make part of the signal
+#define USM_OTH_DEBOUNCE_HIGH_MS  100     // delay to debounce the break part of the signal
+
+// BUTTON types need a few extra times for multi-click and hold event detection
+#define USM_BTN_MULTI_CLICK_MS    200     // how long to wait for another click before sending a multi-click event
+#define USM_BTN_HOLD_MS           500     // how long before a click is considered a HOLD event (and repeated)
+#define USM_BTN_MAX_CLICKS        5       // max count reported in a multi-click event
 
 // Event constants
 #define USM_NO_EVENT              0
 #define USM_HOLD_EVENT            15
 #define USM_LOW                   14
 #define USM_HIGH                  13
-
-// Max number of clicks we support (won't report more even if button clicked more often)
-#define USM_MAX_CLICKS            5
 
 // Rotary encoder state variables
 #define USM_R_START               0x0
@@ -151,6 +155,9 @@ class USM_Input
 
     // Private methods
     uint8_t _getValue(uint16_t value, uint8_t input);
+    uint16_t _getDebounceLowTime(uint8_t type);
+    uint16_t _getDebounceHighTime(uint8_t type);
+    
     void _update(uint8_t state[], uint16_t value);
 };
 
