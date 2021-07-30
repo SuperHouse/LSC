@@ -758,11 +758,11 @@ void scanI2CBus()
         for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
         {
           mcp23017[i].pinMode(pin, INPUT);
-          
-          if (MCP_INTERNAL_PULLUPS)
-          {
-            mcp23017[i].pullUp(pin, HIGH);
-          }
+          if (MCP_INTERNAL_PULLUPS) { mcp23017[i].pullUp(pin, HIGH); }
+
+          // NOTE: above code works for v1.3.0 of the MCP23017 library
+          //       but in v2.0.0+ need to replace with;
+          //mcp23017[i].pinMode(pin, MCP_INTERNAL_PULLUPS ? INPUT_PULLUP : INPUT);
         }
 
         // Listen for input events
