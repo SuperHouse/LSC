@@ -81,7 +81,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.5"
+#define VERSION "4.6"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
@@ -758,13 +758,19 @@ void scanI2CBus()
         for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
         {
           mcp23017[i].pinMode(pin, INPUT);
-          mcp23017[i].pullUp(pin, HIGH);
+          
+          if (MCP_INTERNAL_PULLUPS)
+          {
+            mcp23017[i].pullUp(pin, HIGH);
+          }
         }
 
         // Listen for input events
-        usmInput[i].onEvent(usmEvent); 
-        
-        Serial.println(F("MCP23017"));
+        usmInput[i].onEvent(usmEvent);
+
+        Serial.print(F("MCP23017"));
+        if (MCP_INTERNAL_PULLUPS) { Serial.print(F(" (internal pullups)")); }
+        Serial.println();
       }
       else
       {

@@ -38,6 +38,7 @@ const uint8_t mqtt_lwt_retain       = 1;
              
 /* MCP23017 */
 #define       MCP_MAX_COUNT           6                     // Max number of supported MCP23017 chips 
+#define       MCP_INTERNAL_PULLUPS    false                 // Enable if using an old LSC breakout with no external pullups
 
 /* Watchdog */
 #define       ENABLE_WATCHDOG         false
