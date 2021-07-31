@@ -266,29 +266,29 @@ void loop()
 
   // Iterate through each of the MCP23017 input buffers
   uint32_t port_changed = 0L;
-  for (uint8_t i = 0; i < MCP_MAX_COUNT; i++)
+  for (uint8_t mcp = 0; mcp < MCP_MAX_COUNT; mcp++)
   {
-    if (bitRead(g_mcps_found, i) == 0)
+    if (bitRead(g_mcps_found, mcp) == 0)
       continue;
 
     // Read the values for all 16 inputs on this MCP
-    uint16_t io_value = mcp23017[i].readGPIOAB();
+    uint16_t io_value = mcp23017[mcp].readGPIOAB();
 
     // Compare with last stored value
-    uint16_t tmp = io_value ^ g_mcp_io_values[i];
+    uint16_t tmp = io_value ^ g_mcp_io_values[mcp];
     for (uint8_t j = 0; j < 4; j++)
     {
       if ((tmp >> (j * 4)) & 0x000F)
       {
-        bitSet(port_changed, (i * 4) + j);
+        bitSet(port_changed, (mcp * 4) + j);
       }
     }
 
     // Need to store so we can detect changes for port animation
-    g_mcp_io_values[i] = io_value;
+    g_mcp_io_values[mcp] = io_value;
 
     // Check for any input events
-    usmInput[i].process(i, io_value);
+    usmInput[mcp].process(mcp, io_value);
   }
   
   // Update OLED port animation 
@@ -739,34 +739,35 @@ void scanI2CBus()
   Serial.println(F("Scanning for devices on the I2C bus..."));
 
   // Scan for MCP's
-  for (uint8_t i = 0; i < sizeof(MCP_I2C_ADDRESS); i++)
+  uint8_t mcp = 0;
+  for (uint8_t addr = 0; addr < sizeof(MCP_I2C_ADDRESS); addr++)
   {
     Serial.print(F(" - 0x"));
-    Serial.print(MCP_I2C_ADDRESS[i], HEX);
+    Serial.print(MCP_I2C_ADDRESS[addr], HEX);
     Serial.print(F("..."));
 
     // Check if there is anything responding on this address
-    Wire.beginTransmission(MCP_I2C_ADDRESS[i]);
+    Wire.beginTransmission(MCP_I2C_ADDRESS[addr]);
     if (Wire.endTransmission() == 0)
     {
-      if (i < MCP_MAX_COUNT) 
+      if (mcp < MCP_MAX_COUNT) 
       {
-        bitWrite(g_mcps_found, i, 1);
+        bitWrite(g_mcps_found, mcp, 1);
         
         // If an MCP23017 was found then initialise and configure the inputs
-        mcp23017[i].begin(i);
+        mcp23017[mcp].begin(MCP_I2C_ADDRESS[addr] & 0x07);
         for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
         {
-          mcp23017[i].pinMode(pin, INPUT);
-          if (MCP_INTERNAL_PULLUPS) { mcp23017[i].pullUp(pin, HIGH); }
+          mcp23017[mcp].pinMode(pin, INPUT);
+          if (MCP_INTERNAL_PULLUPS) { mcp23017[mcp].pullUp(pin, HIGH); }
 
           // NOTE: above code works for v1.3.0 of the MCP23017 library
           //       but in v2.0.0+ need to replace with;
-          //mcp23017[i].pinMode(pin, MCP_INTERNAL_PULLUPS ? INPUT_PULLUP : INPUT);
+          //mcp23017[mcp].pinMode(pin, MCP_INTERNAL_PULLUPS ? INPUT_PULLUP : INPUT);
         }
 
         // Listen for input events
-        usmInput[i].onEvent(usmEvent);
+        usmInput[mcp].onEvent(usmEvent);
 
         Serial.print(F("MCP23017"));
         if (MCP_INTERNAL_PULLUPS) { Serial.print(F(" (internal pullups)")); }
@@ -774,11 +775,16 @@ void scanI2CBus()
       }
       else
       {
+        // MCP found but we don't have enough space to handle it (see MCP_MAX_COUNT)
         Serial.println(F("ignored"));
       }
+
+      // Increment our MCP index
+      mcp++;
     }
     else
     {
+      // No MCP found at this address
       Serial.println(F("empty"));
     }
   }
