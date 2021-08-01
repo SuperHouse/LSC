@@ -81,7 +81,7 @@
 */
 
 /*--------------------------- Version ------------------------------------*/
-#define VERSION "4.7"
+#define VERSION "4.8"
 
 /*--------------------------- Configuration ------------------------------*/
 // Should be no user configuration in this file, everything should be in;
