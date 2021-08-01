@@ -96,12 +96,8 @@
 #include "USM_Oled.h"                 // For OLED runtime displays
 
 /*--------------------------- Constants ----------------------------------*/
-// Each MCP23017 has 16 inputs
-#define MCP_PIN_COUNT       16
-
-// List of I2C addresses we might be interested in 
-//  - 0x20-0x27 are the possible 8x MCP23017 chips
-byte MCP_I2C_ADDRESS[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+// Each MCP23017 has 16 I/O pins
+#define MCP_PIN_COUNT 16
 
 /*--------------------------- Global Variables ---------------------------*/
 // Each bit corresponds to an MCP found on the IC2 bus
@@ -126,7 +122,7 @@ uint32_t g_mqtt_last_reconnect_ms = 0L;
 uint32_t g_watchdog_last_reset_ms = 0L;
 
 // store MCP portAB values -> needed for port animation
-uint16_t g_mcp_io_values[MCP_MAX_COUNT];
+uint16_t g_mcp_io_values[MCP_COUNT];
 
 // for timeout (clear) of bottom line input event display
 uint32_t g_last_event_display = 0L;
@@ -139,16 +135,16 @@ void mqttCallback(char * topic, byte * payload, int length);
 
 /*--------------------------- Instantiate Global Objects -----------------*/
 // I/O buffers
-Adafruit_MCP23017 mcp23017[MCP_MAX_COUNT];
+Adafruit_MCP23017 mcp23017[MCP_COUNT];
 
 // Input handlers
-USM_Input usmInput[MCP_MAX_COUNT];
+USM_Input usmInput[MCP_COUNT];
 
 // Ethernet client
 EthernetClient ethernet;
 
 // MQTT client
-PubSubClient mqtt_client(mqtt_broker, mqtt_port, mqttCallback, ethernet);
+PubSubClient mqtt_client(MQTT_BROKER, MQTT_PORT, mqttCallback, ethernet);
 
 // OLED
 SSD1306AsciiWire oled;
@@ -178,7 +174,7 @@ void setup()
   // Scan the I2C bus for any MCP23017s and initialise them
   scanI2CBus();
 
-  // set I2C clock to 400 kHz for faster scan rate  
+  // Set I2C clock to 400 kHz for faster scan rate  
   // needs to be called after scanI2CBus() to take effect
   Wire.setClock(I2C_CLOCK_SPEED);
 
@@ -204,7 +200,7 @@ void setup()
   else
   {
     Serial.print(F("Using static MAC address: "));
-    memcpy(mac, static_mac, sizeof(mac));
+    memcpy(mac, STATIC_MAC, sizeof(mac));
   }
   char mac_address[18];
   sprintf_P(mac_address, PSTR("%02X:%02X:%02X:%02X:%02X:%02X"), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -219,7 +215,7 @@ void setup()
   else
   {
     Serial.print(F("Using static IP address: "));
-    Ethernet.begin(mac, static_ip, static_dns);
+    Ethernet.begin(mac, STATIC_IP, STATIC_DNS);
   }
   Serial.println(Ethernet.localIP());
 
@@ -233,13 +229,13 @@ void setup()
   }
 
   // Generate MQTT client id, unless one is explicitly defined
-  if (mqtt_client_id == NULL)
+  if (MQTT_CLIENT_ID == NULL)
   {
     sprintf_P(g_mqtt_client_id, PSTR("USM-%02X%02X%02X"), mac[3], mac[4], mac[5]);  
   }
   else
   {
-    memcpy(g_mqtt_client_id, mqtt_client_id, sizeof(g_mqtt_client_id));
+    memcpy(g_mqtt_client_id, MQTT_CLIENT_ID, sizeof(g_mqtt_client_id));
   }
   Serial.print(F("MQTT client id: "));
   Serial.println(g_mqtt_client_id);
@@ -247,7 +243,7 @@ void setup()
   // Generate MQTT LWT topic (if required)
   if (ENABLE_MQTT_LWT)
   {
-    sprintf_P(g_mqtt_lwt_topic, PSTR("%s/%s"), mqtt_lwt_base_topic, g_mqtt_client_id);  
+    sprintf_P(g_mqtt_lwt_topic, PSTR("%s/%s"), MQTT_LWT_BASE_TOPIC, g_mqtt_client_id);  
     Serial.print(F("MQTT LWT topic: "));
     Serial.println(g_mqtt_lwt_topic);
   }
@@ -266,7 +262,7 @@ void loop()
 
   // Iterate through each of the MCP23017 input buffers
   uint32_t port_changed = 0L;
-  for (uint8_t mcp = 0; mcp < MCP_MAX_COUNT; mcp++)
+  for (uint8_t mcp = 0; mcp < MCP_COUNT; mcp++)
   {
     if (bitRead(g_mcps_found, mcp) == 0)
       continue;
@@ -341,11 +337,11 @@ boolean mqttConnect()
   boolean success;
   if (ENABLE_MQTT_LWT)
   {
-    success = mqtt_client.connect(g_mqtt_client_id, mqtt_username, mqtt_password, g_mqtt_lwt_topic, mqtt_lwt_qos, mqtt_lwt_retain, "0");
+    success = mqtt_client.connect(g_mqtt_client_id, MQTT_USERNAME, MQTT_PASSWORD, g_mqtt_lwt_topic, MQTT_LWT_QOS, MQTT_LWT_RETAIN, "0");
   }
   else
   {
-    success = mqtt_client.connect(g_mqtt_client_id, mqtt_username, mqtt_password);
+    success = mqtt_client.connect(g_mqtt_client_id, MQTT_USERNAME, MQTT_PASSWORD);
   }
 
   if (success)
@@ -358,7 +354,7 @@ boolean mqttConnect()
     if (ENABLE_MQTT_LWT)
     {
       byte lwt_payload[] = { '1' };
-      mqtt_client.publish(g_mqtt_lwt_topic, lwt_payload, 1, mqtt_lwt_retain);
+      mqtt_client.publish(g_mqtt_lwt_topic, lwt_payload, 1, MQTT_LWT_RETAIN);
     }
   }
 
@@ -385,15 +381,15 @@ void mqttCallback(char * topic, byte * payload, int length)
   topicIndex = strtok(NULL, "/");
   topicIndex = strtok(NULL, "/");
 
-  if (mqtt_base_topic != NULL)
+  if (MQTT_BASE_TOPIC != NULL)
   {
     topicIndex = strtok(NULL, "/");
   }
 
   // Parse the index and work out which MCP/input
   int index = atoi(topicIndex);
-  int mcp = (index - 1) / 16;
-  int input = (index - 1) % 16;
+  int mcp = (index - 1) / MCP_PIN_COUNT;
+  int input = (index - 1) % MCP_PIN_COUNT;
 
   if (ENABLE_DEBUG)
   {
@@ -403,7 +399,7 @@ void mqttCallback(char * topic, byte * payload, int length)
   }
 
   // Check the index is valid
-  if ((index < 1) || (index > (MCP_MAX_COUNT * 16)))
+  if ((index < 1) || (index > (MCP_COUNT * MCP_PIN_COUNT)))
   {
     if (ENABLE_DEBUG) { Serial.println(F(" INVALID INDEX")); }
     return;
@@ -568,26 +564,26 @@ void getEventType(char eventType[], uint8_t type, uint8_t state)
 
 char * getConfigTopic(char topic[])
 {
-  if (mqtt_base_topic == NULL)
+  if (MQTT_BASE_TOPIC == NULL)
   {
     sprintf_P(topic, PSTR("conf/%s/+/+"), g_mqtt_client_id);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), mqtt_base_topic, g_mqtt_client_id);
+    sprintf_P(topic, PSTR("%s/conf/%s/+/+"), MQTT_BASE_TOPIC, g_mqtt_client_id);
   }
   return topic;
 }
 
 char * getEventTopic(char topic[], uint8_t index)
 {
-  if (mqtt_base_topic == NULL)
+  if (MQTT_BASE_TOPIC == NULL)
   {
     sprintf_P(topic, PSTR("stat/%s/%d"), g_mqtt_client_id, index);
   }
   else
   {
-    sprintf_P(topic, PSTR("%s/stat/%s/%d"), mqtt_base_topic, g_mqtt_client_id, index);
+    sprintf_P(topic, PSTR("%s/stat/%s/%d"), MQTT_BASE_TOPIC, g_mqtt_client_id, index);
   }
   return topic;
 }
@@ -739,48 +735,36 @@ void scanI2CBus()
   Serial.println(F("Scanning for devices on the I2C bus..."));
 
   // Scan for MCP's
-  uint8_t mcp = 0;
-  for (uint8_t addr = 0; addr < sizeof(MCP_I2C_ADDRESS); addr++)
+  for (uint8_t mcp = 0; mcp < MCP_COUNT; mcp++)
   {
     Serial.print(F(" - 0x"));
-    Serial.print(MCP_I2C_ADDRESS[addr], HEX);
+    Serial.print(MCP_I2C_ADDRESS[mcp], HEX);
     Serial.print(F("..."));
 
     // Check if there is anything responding on this address
-    Wire.beginTransmission(MCP_I2C_ADDRESS[addr]);
+    Wire.beginTransmission(MCP_I2C_ADDRESS[mcp]);
     if (Wire.endTransmission() == 0)
     {
-      if (mcp < MCP_MAX_COUNT) 
+      bitWrite(g_mcps_found, mcp, 1);
+      
+      // If an MCP23017 was found then initialise and configure the inputs
+      mcp23017[mcp].begin(MCP_I2C_ADDRESS[mcp] & 0x07);
+      for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
       {
-        bitWrite(g_mcps_found, mcp, 1);
-        
-        // If an MCP23017 was found then initialise and configure the inputs
-        mcp23017[mcp].begin(MCP_I2C_ADDRESS[addr] & 0x07);
-        for (uint8_t pin = 0; pin < MCP_PIN_COUNT; pin++)
-        {
-          mcp23017[mcp].pinMode(pin, INPUT);
-          if (MCP_INTERNAL_PULLUPS) { mcp23017[mcp].pullUp(pin, HIGH); }
+        mcp23017[mcp].pinMode(pin, INPUT);
+        if (MCP_INTERNAL_PULLUPS) { mcp23017[mcp].pullUp(pin, HIGH); }
 
-          // NOTE: above code works for v1.3.0 of the MCP23017 library
-          //       but in v2.0.0+ need to replace with;
-          //mcp23017[mcp].pinMode(pin, MCP_INTERNAL_PULLUPS ? INPUT_PULLUP : INPUT);
-        }
-
-        // Listen for input events
-        usmInput[mcp].onEvent(usmEvent);
-
-        Serial.print(F("MCP23017"));
-        if (MCP_INTERNAL_PULLUPS) { Serial.print(F(" (internal pullups)")); }
-        Serial.println();
-      }
-      else
-      {
-        // MCP found but we don't have enough space to handle it (see MCP_MAX_COUNT)
-        Serial.println(F("ignored"));
+        // NOTE: above code works for v1.3.0 of the MCP23017 library
+        //       but in v2.0.0+ need to replace with;
+        //mcp23017[mcp].pinMode(pin, MCP_INTERNAL_PULLUPS ? INPUT_PULLUP : INPUT);
       }
 
-      // Increment our MCP index
-      mcp++;
+      // Listen for input events
+      usmInput[mcp].onEvent(usmEvent);
+
+      Serial.print(F("MCP23017"));
+      if (MCP_INTERNAL_PULLUPS) { Serial.print(F(" (internal pullups)")); }
+      Serial.println();
     }
     else
     {

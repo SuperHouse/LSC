@@ -3,41 +3,43 @@
 
 /* ----------------- General config -------------------------------- */
 /* Debugging */
-#define ENABLE_DEBUG                  true
+#define       ENABLE_DEBUG            true
 
 /* Serial */
-#define SERIAL_BAUD_RATE              115200
+#define       SERIAL_BAUD_RATE        115200
 
 /* Ethernet */
-#define ENABLE_DHCP                   true
-#define ENABLE_MAC_ADDRESS_ROM        true
-#define MAC_I2C_ADDRESS               0x50                  // Microchip 24AA125E48 I2C ROM address
+#define       ENABLE_DHCP             true
+#define       ENABLE_MAC_ADDRESS_ROM  true
+#define       MAC_I2C_ADDRESS         0x50                  // Microchip 24AA125E48 I2C ROM address
 
-const byte    static_mac[]          = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Use if no MAC ROM
-const byte    static_ip[]           = { 192, 168, 1, 35 };                    // Use if DHCP disabled
-const byte    static_dns[]          = { 192, 168, 1, 1 };                     // Use if DHCP disabled
+const byte    STATIC_MAC[]          = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // Use if no MAC ROM
+const byte    STATIC_IP[]           = { 192, 168, 1, 35 };                    // Use if DHCP disabled
+const byte    STATIC_DNS[]          = { 192, 168, 1, 1 };                     // Use if DHCP disabled
 
 /* MQTT */
 #define       MQTT_BACKOFF_SECS       5                     // How long to increase the backoff timer each time we fail to connect
 #define       MQTT_MAX_BACKOFF_COUNT  12                    // Max number of backoffs (i.e. longest backoff is MQTT_BACKOFF_SECS * MQTT_MAX_BACKOFF_COUNT)
-const char *  mqtt_broker           = "test.mosquitto.org"; // IP address or host name of your MQTT broker
-const int     mqtt_port             = 1883;
-const char *  mqtt_client_id        = NULL;                 // Max 15 chars, optional
-const char *  mqtt_username         = NULL;                 // Optional, NULL if no authentication
-const char *  mqtt_password         = NULL;                 // Optional, NULL if no authentication
-const char *  mqtt_base_topic       = "usm";                // Max 15 chars with NO trailing '/', optional
+const char *  MQTT_BROKER           = "test.mosquitto.org"; // IP address or host name of your MQTT broker
+const int     MQTT_PORT             = 1883;
+const char *  MQTT_CLIENT_ID        = NULL;                 // Max 15 chars, optional
+const char *  MQTT_USERNAME         = NULL;                 // Optional, NULL if no authentication
+const char *  MQTT_PASSWORD         = NULL;                 // Optional, NULL if no authentication
+const char *  MQTT_BASE_TOPIC       = "usm";                // Max 15 chars with NO trailing '/', optional
 
 #define       ENABLE_MQTT_LWT         false
-const char *  mqtt_lwt_base_topic   = "clients";            // Max 15 chars with NO trailing '/'
-const uint8_t mqtt_lwt_qos          = 0;
-const uint8_t mqtt_lwt_retain       = 1;
+const char *  MQTT_LWT_BASE_TOPIC   = "clients";            // Max 15 chars with NO trailing '/'
+const uint8_t MQTT_LWT_QOS          = 0;
+const uint8_t MQTT_LWT_RETAIN       = 1;
 
 /* ----------------- Hardware-specific config ---------------------- */
 /* I2C */
 #define       I2C_CLOCK_SPEED         400000L  
              
-/* MCP23017 */
-#define       MCP_MAX_COUNT           6                     // Max number of supported MCP23017 chips 
+/* MCP23017 - for MEMORY CONSTRAINED devices reduce the I2C address array to suit */
+const byte    MCP_I2C_ADDRESS[]     = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 }; // Use for non-memory constrained devices
+//const byte    MCP_I2C_ADDRESS[]     = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25 };           // Use for Arduino Uno - max 6 MCPs
+const uint8_t MCP_COUNT             = sizeof(MCP_I2C_ADDRESS);
 #define       MCP_INTERNAL_PULLUPS    false                 // Enable if using an old LSC breakout with no external pullups
 
 /* Watchdog */
