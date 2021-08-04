@@ -48,12 +48,14 @@ this project download it and place the directory containing these files
 into the "eagle" directory on your computer. Then open EAGLE and
 navigate to the project.
 
+FIRMWARE
+--------
+See [Universal State Monitor](https://github.com/SuperHouse/USM) for 
+firmware which is compatible with the LSC.
 
 CREDITS
 -------
  * Jonathan Oxer jon@oxer.com.au
- * Ben Jones <ben.jones12@gmail.com>
-
 
 DISTRIBUTION
 ------------
